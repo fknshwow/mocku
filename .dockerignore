@@ -1,0 +1,56 @@
+# .dockerignore
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+LICENSE
+
+# Docker
+Dockerfile*
+docker-compose*
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userprefs
+**/obj/
+**/bin/
+.vscode/
+
+# Build artifacts
+**/obj
+**/bin
+
+# NuGet
+packages/
+*.nupkg
+
+# Test results
+TestResults/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Node modules (if any)
+node_modules/
+
+# IDE files
+*.swp
+*.swo
+*~
