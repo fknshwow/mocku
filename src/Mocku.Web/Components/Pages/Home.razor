@@ -7,6 +7,8 @@
 @inject MockApiService MockApiService
 @inject MockFileService MockFileService
 @inject RequestLogService RequestLogService
+@inject RequestGeneratorService RequestGeneratorService
+@inject IJSRuntime JSRuntime
 @inject ILogger<Home> Logger
 @implements IDisposable
 @rendermode InteractiveServer
@@ -262,18 +264,23 @@
                                                             }
                                                         </td>
                                                         <td>
-                                                            @if (mock.HasWildcards)
-                                                            {
-                                                                <button class="btn btn-sm btn-outline-secondary" disabled title="Cannot test wildcard endpoints directly">
-                                                                    <i class="bi bi-asterisk"></i> Wildcard
+                                                            <div class="btn-group btn-group-sm">
+                                                                @if (mock.HasWildcards)
+                                                                {
+                                                                    <button class="btn btn-outline-secondary" disabled title="Cannot test wildcard endpoints directly">
+                                                                        <i class="bi bi-asterisk"></i> Wildcard
+                                                                    </button>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <a href="@mock.Path" target="_blank" class="btn btn-outline-primary" title="Test in browser">
+                                                                        <i class="bi bi-box-arrow-up-right"></i> Test
+                                                                    </a>
+                                                                }
+                                                                <button class="btn btn-outline-info" @onclick="() => ShowSampleRequestModal(mock)" title="Generate sample request">
+                                                                    <i class="bi bi-code-slash"></i> Sample
                                                                 </button>
-                                                            }
-                                                            else
-                                                            {
-                                                                <a href="@mock.Path" target="_blank" class="btn btn-sm btn-outline-primary">
-                                                                    <i class="bi bi-box-arrow-up-right"></i> Test
-                                                                </a>
-                                                            }
+                                                            </div>
                                                         </td>
                                                     </tr>
                                                 }
@@ -519,7 +526,7 @@
                                 </div>
 
                                 <div class="logs-container" id="logsContainer">
-                                    @foreach (var log in filteredLogs.Take(100)) // Limit to first 100 for performance
+                                    @foreach (var log in filteredLogs.Take(100))
                                     {
                                         <div class="log-entry card mb-1 @(log.IsMatchedByMock ? "border-success" : "border-warning")">
                                             <div class="card-body p-2">
@@ -764,6 +771,123 @@
     </div>
 }
 
+<!-- Sample Request Modal -->
+@if (showSampleRequestModal && selectedMockForSample != null)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-code-slash text-info"></i> Sample Request for 
+                        <span class="badge bg-@GetMethodBadgeColor(selectedMockForSample.Method) me-1">@selectedMockForSample.Method</span>
+                        <code>@selectedMockForSample.Path</code>
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="CloseSampleRequestModal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Tab Navigation -->
+                    <ul class="nav nav-tabs" id="sampleRequestTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link @(activeSampleTab == "curl" ? "active" : "")" 
+                                    @onclick='() => SetActiveSampleTab("curl")' 
+                                    type="button">
+                                <i class="bi bi-terminal"></i> cURL
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link @(activeSampleTab == "javascript" ? "active" : "")" 
+                                    @onclick='() => SetActiveSampleTab("javascript")' 
+                                    type="button">
+                                <i class="bi bi-braces"></i> JavaScript
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link @(activeSampleTab == "csharp" ? "active" : "")" 
+                                    @onclick='() => SetActiveSampleTab("csharp")' 
+                                    type="button">
+                                <i class="bi bi-code-square"></i> C#
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link @(activeSampleTab == "raw" ? "active" : "")" 
+                                    @onclick='() => SetActiveSampleTab("raw")' 
+                                    type="button">
+                                <i class="bi bi-file-text"></i> Raw HTTP
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Tab Content -->
+                    <div class="tab-content mt-3">
+                        @if (activeSampleTab == "curl")
+                        {
+                            <div class="tab-pane active">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6>cURL Command</h6>
+                                    <button class="btn btn-sm btn-outline-secondary" @onclick="() => CopyToClipboard(currentCurlCommand)">
+                                        <i class="bi bi-clipboard"></i> Copy
+                                    </button>
+                                </div>
+                                <pre class="bg-dark text-light p-3 rounded"><code>@currentCurlCommand</code></pre>
+                                <small class="text-muted">Copy and paste this command into your terminal to test the endpoint.</small>
+                            </div>
+                        }
+                        else if (activeSampleTab == "javascript")
+                        {
+                            <div class="tab-pane active">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6>JavaScript Fetch</h6>
+                                    <button class="btn btn-sm btn-outline-secondary" @onclick="() => CopyToClipboard(currentJavaScriptCode)">
+                                        <i class="bi bi-clipboard"></i> Copy
+                                    </button>
+                                </div>
+                                <pre class="bg-dark text-light p-3 rounded"><code>@currentJavaScriptCode</code></pre>
+                                <small class="text-muted">Use this in your browser console or JavaScript application.</small>
+                            </div>
+                        }
+                        else if (activeSampleTab == "csharp")
+                        {
+                            <div class="tab-pane active">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6>C# HttpClient</h6>
+                                    <button class="btn btn-sm btn-outline-secondary" @onclick="() => CopyToClipboard(currentCSharpCode)">
+                                        <i class="bi bi-clipboard"></i> Copy
+                                    </button>
+                                </div>
+                                <pre class="bg-dark text-light p-3 rounded"><code>@currentCSharpCode</code></pre>
+                                <small class="text-muted">Use this in your .NET application with HttpClient.</small>
+                            </div>
+                        }
+                        else if (activeSampleTab == "raw")
+                        {
+                            <div class="tab-pane active">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6>Raw HTTP Request</h6>
+                                    <button class="btn btn-sm btn-outline-secondary" @onclick="() => CopyToClipboard(currentRawHttp)">
+                                        <i class="bi bi-clipboard"></i> Copy
+                                    </button>
+                                </div>
+                                <pre class="bg-dark text-light p-3 rounded"><code>@currentRawHttp</code></pre>
+                                <small class="text-muted">Raw HTTP request format for use with any HTTP client.</small>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseSampleRequestModal">Close</button>
+                    @if (!selectedMockForSample.HasWildcards)
+                    {
+                        <a href="@selectedMockForSample.Path" target="_blank" class="btn btn-primary">
+                            <i class="bi bi-box-arrow-up-right"></i> Test in Browser
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private List<MockApiDefinition> mockDefinitions = new();
     private List<MockFileInfo> mockFiles = new();
@@ -795,6 +919,15 @@
 
     // Logs state
     private List<RequestLogEntry> requestLogs = new();
+
+    // Sample request state
+    private bool showSampleRequestModal = false;
+    private MockApiDefinition? selectedMockForSample = null;
+    private string activeSampleTab = "curl";
+    private string currentCurlCommand = "";
+    private string currentJavaScriptCode = "";
+    private string currentCSharpCode = "";
+    private string currentRawHttp = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -1165,6 +1298,91 @@
     {
         logSearchTerm = "";
         StateHasChanged();
+    }
+
+    // Sample Request Methods
+    private void ShowSampleRequestModal(MockApiDefinition mock)
+    {
+        selectedMockForSample = mock;
+        activeSampleTab = "curl";
+        GenerateSampleRequests();
+        showSampleRequestModal = true;
+        StateHasChanged();
+    }
+
+    private void CloseSampleRequestModal()
+    {
+        showSampleRequestModal = false;
+        selectedMockForSample = null;
+        StateHasChanged();
+    }
+
+    private void SetActiveSampleTab(string tab)
+    {
+        activeSampleTab = tab;
+        StateHasChanged();
+    }
+
+    private void GenerateSampleRequests()
+    {
+        if (selectedMockForSample == null) return;
+
+        try
+        {
+            var baseUrl = "http://localhost:5000";
+            
+            currentCurlCommand = RequestGeneratorService.GenerateCurlCommand(selectedMockForSample, baseUrl);
+            currentJavaScriptCode = RequestGeneratorService.GenerateJavaScriptFetch(selectedMockForSample, baseUrl);
+            currentCSharpCode = RequestGeneratorService.GenerateCSharpHttpClient(selectedMockForSample, baseUrl);
+            currentRawHttp = GenerateRawHttp(selectedMockForSample, baseUrl);
+            
+            // Debug: Log what was generated for troubleshooting
+            Logger.LogInformation("Generated sample request for {Method} {Path}. Body preview: {Body}", 
+                selectedMockForSample.Method, 
+                selectedMockForSample.Path, 
+                currentCurlCommand.Contains("-d '") ? 
+                    currentCurlCommand.Substring(currentCurlCommand.IndexOf("-d '") + 4).Split('\'')[0] : 
+                    "No body");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error generating sample requests for {Method} {Path}", selectedMockForSample?.Method, selectedMockForSample?.Path);
+        }
+    }
+
+    private string GenerateRawHttp(MockApiDefinition mock, string baseUrl)
+    {
+        var sampleRequest = RequestGeneratorService.GenerateSampleRequest(mock, baseUrl);
+        var uri = new Uri(sampleRequest.Url);
+        
+        var rawHttp = $"{mock.Method} {uri.PathAndQuery} HTTP/1.1\n";
+        rawHttp += $"Host: {uri.Host}:{uri.Port}\n";
+        
+        foreach (var header in sampleRequest.Headers)
+        {
+            rawHttp += $"{header.Key}: {header.Value}\n";
+        }
+        
+        if (!string.IsNullOrEmpty(sampleRequest.Body))
+        {
+            rawHttp += $"Content-Length: {System.Text.Encoding.UTF8.GetByteCount(sampleRequest.Body)}\n";
+            rawHttp += "\n";
+            rawHttp += sampleRequest.Body;
+        }
+        
+        return rawHttp;
+    }
+
+    private async Task CopyToClipboard(string text)
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error copying to clipboard");
+        }
     }
 
     // Utility Methods

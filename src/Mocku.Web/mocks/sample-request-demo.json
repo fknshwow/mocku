@@ -1,0 +1,29 @@
+{
+  "path": "/api/sample-demo",
+  "method": "POST",
+  "statusCode": 201,
+  "contentType": "application/json",
+  "delayMs": 300,
+  "responseHeaders": {
+    "X-API-Version": "1.0",
+    "X-Request-ID": "{{now}}",
+    "X-User-ID": "{{request.body.userId}}",
+    "X-Client-App": "{{request.headers.x-client-app}}"
+  },
+  "responseBody": {
+    "id": "{{toNumber(request.body.userId)}}",
+    "message": "Sample request generation demo",
+    "created": "{{now}}",
+    "userData": {
+      "name": "{{request.body.user.name}}",
+      "email": "{{request.body.user.email}}",
+      "department": "{{request.body.user.department}}"
+    },
+    "requestData": {
+      "userAgent": "{{request.headers.user-agent}}",
+      "contentType": "{{request.headers.content-type}}",
+      "clientApp": "{{request.headers.x-client-app}}",
+      "requestId": "{{request.headers.x-request-id}}"
+    }
+  }
+}

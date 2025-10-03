@@ -1,0 +1,26 @@
+{
+  "path": "/api/search-int",
+  "method": "GET",
+  "statusCode": 200,
+  "contentType": "application/json",
+  "responseBody": {
+    "query": "{{request.query.q}}",
+    "category": "{{request.query.category}}",
+    "page": "{{toNumber(request.query.page)}}",
+    "limit": "{{toNumber(request.query.limit)}}",
+    "sort": "{{request.query.sort}}",
+    "includeInactive": "{{toBool(request.query.includeInactive)}}",
+    "results": [
+      {
+        "id": 1,
+        "title": "Sample Result matching '{{request.query.q}}'",
+        "category": "{{request.query.category}}"
+      }
+    ],
+    "meta": {
+      "totalResults": 42,
+      "currentPage": "{{toNumber(request.query.page)}}",
+      "totalPages": 5
+    }
+  }
+}

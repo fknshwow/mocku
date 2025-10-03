@@ -13,6 +13,7 @@ builder.Services.AddSingleton<MockApiService>();
 builder.Services.AddSingleton<MockFileService>();
 builder.Services.AddSingleton<TemplateProcessor>();
 builder.Services.AddSingleton<RequestLogService>();
+builder.Services.AddScoped<RequestGeneratorService>();
 
 var app = builder.Build();
 

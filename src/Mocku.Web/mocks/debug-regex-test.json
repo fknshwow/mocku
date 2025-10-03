@@ -1,0 +1,11 @@
+{
+  "path": "/api/debug-test",
+  "method": "POST", 
+  "statusCode": 200,
+  "responseBody": {
+    "simple": "{{request.body.name}}",
+    "function": "{{toBool(request.body.notifications)}}",
+    "nested": "{{request.body.user.preferences.theme}}",
+    "nestedFunction": "{{toBool(request.body.user.preferences.notifications)}}"
+  }
+}

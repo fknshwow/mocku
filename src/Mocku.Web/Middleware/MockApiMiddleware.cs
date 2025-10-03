@@ -98,11 +98,39 @@ public class MockApiMiddleware
                     { 
                         WriteIndented = true 
                     });
-                    mockResponseBody = _templateProcessor.ProcessTemplate(jsonString, requestContext);
+                    // Use ProcessJsonTemplate for proper JSON processing with typed values
+                    mockResponseBody = _templateProcessor.ProcessJsonTemplate(jsonString, requestContext);
+                }
+                else if (mock.ResponseBody is string stringBody)
+                {
+                    // For string bodies, try JSON processing first, fallback to string processing
+                    try
+                    {
+                        // Try to parse as JSON to see if it's valid JSON
+                        JsonDocument.Parse(stringBody);
+                        mockResponseBody = _templateProcessor.ProcessJsonTemplate(stringBody, requestContext);
+                    }
+                    catch (JsonException)
+                    {
+                        // Not valid JSON, process as string template
+                        mockResponseBody = _templateProcessor.ProcessTemplate(stringBody, requestContext);
+                    }
                 }
                 else
                 {
-                    mockResponseBody = _templateProcessor.ProcessTemplate(mock.ResponseBody?.ToString() ?? "", requestContext);
+                    // For other types, convert to string and process
+                    var bodyString = mock.ResponseBody?.ToString() ?? "";
+                    try
+                    {
+                        // Try to parse as JSON to see if it's valid JSON
+                        JsonDocument.Parse(bodyString);
+                        mockResponseBody = _templateProcessor.ProcessJsonTemplate(bodyString, requestContext);
+                    }
+                    catch (JsonException)
+                    {
+                        // Not valid JSON, process as string template
+                        mockResponseBody = _templateProcessor.ProcessTemplate(bodyString, requestContext);
+                    }
                 }
 
                 logEntry.ResponseBody = mockResponseBody;

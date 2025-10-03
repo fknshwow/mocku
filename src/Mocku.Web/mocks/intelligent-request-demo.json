@@ -1,0 +1,29 @@
+{
+  "path": "/api/users-int",
+  "method": "POST",
+  "statusCode": 201,
+  "contentType": "application/json",
+  "responseHeaders": {
+    "X-User-ID": "{{request.body.user.id}}",
+    "X-Request-Source": "{{request.headers.x-client-app}}"
+  },
+  "responseBody": {
+    "success": true,
+    "message": "User created successfully",
+    "user": {
+      "id": "{{toNumber(request.body.user.id)}}",
+      "name": "{{request.body.user.name}}",
+      "email": "{{request.body.user.email}}",
+      "role": "{{request.body.user.role}}",
+      "preferences": {
+        "theme": "{{request.body.user.preferences.theme}}",
+        "notifications": "{{toBool(request.body.user.preferences.notifications)}}"
+      }
+    },
+    "metadata": {
+      "clientApp": "{{request.headers.x-client-app}}",
+      "userAgent": "{{request.headers.user-agent}}",
+      "requestId": "{{request.headers.x-request-id}}"
+    }
+  }
+}

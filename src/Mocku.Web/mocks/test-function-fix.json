@@ -1,0 +1,20 @@
+{
+  "path": "/api/test-functions",
+  "method": "POST",
+  "statusCode": 200,
+  "contentType": "application/json",
+  "responseBody": {
+    "message": "Testing all template functions",
+    "fromRequest": {
+      "stringValue": "{{toString(request.body.testValue)}}",
+      "numberValue": "{{toNumber(request.body.testValue)}}",
+      "boolValue": "{{toBool(request.body.testValue)}}",
+      "floatValue": "{{toFloat(request.body.testValue)}}"
+    },
+    "typeTest": {
+      "notifications": "{{toBool(request.body.notifications)}}",
+      "userId": "{{toNumber(request.body.userId)}}",
+      "price": "{{toFloat(request.body.price)}}"
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "path": "/api/test-notifications",
+  "method": "POST",
+  "statusCode": 200,
+  "contentType": "application/json",
+  "responseBody": {
+    "message": "Testing notifications field",
+    "userPreferences": {
+      "notifications": "{{toBool(request.body.notifications)}}",
+      "theme": "{{request.body.theme}}"
+    },
+    "debug": {
+      "rawNotifications": "{{request.body.notifications}}",
+      "rawTheme": "{{request.body.theme}}"
+    }
+  }
+}
