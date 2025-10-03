@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36414.22
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mocku.Web", "src\Mocku.Web\Mocku.Web.csproj", "{3949A9F6-E274-68BA-7518-94D7273D8885}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3949A9F6-E274-68BA-7518-94D7273D8885}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3949A9F6-E274-68BA-7518-94D7273D8885}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3949A9F6-E274-68BA-7518-94D7273D8885}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3949A9F6-E274-68BA-7518-94D7273D8885}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BA1EE958-C008-430F-AE0B-5F0893A596C6}
+	EndGlobalSection
+EndGlobal
