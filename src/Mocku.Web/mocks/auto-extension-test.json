@@ -1,0 +1,17 @@
+{
+  "path": "/api/auto-extension-test",
+  "method": "GET",
+  "statusCode": 200,
+  "contentType": "application/json",
+  "responseBody": {
+    "message": "This file was created to test the automatic .json extension feature!",
+    "filename": "auto-extension-test.json",
+    "features": [
+      "Automatic .json extension",
+      "Filename validation",
+      "Real-time preview",
+      "Invalid character detection"
+    ],
+    "timestamp": "2024-01-20T16:45:00Z"
+  }
+}

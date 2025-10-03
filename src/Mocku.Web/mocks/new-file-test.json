@@ -8,7 +8,7 @@
     "X-Custom-Header": "custom-value"
   },
   "responseBody": {
-    "message": "Hello World",
+    "message": "Hello World!",
     "timestamp": "{{request.headers.timestamp}}",
     "data": {
       "id": "{{toNumber(request.query.id)}}",
