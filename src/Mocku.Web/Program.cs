@@ -1,10 +1,16 @@
 using Mocku.Web.Components;
+using Mocku.Web.Services;
+using Mocku.Web.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+// Add mock API services
+builder.Services.AddSingleton<MockApiService>();
+builder.Services.AddSingleton<TemplateProcessor>();
 
 var app = builder.Build();
 
@@ -18,6 +24,8 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Add mock API middleware before static files and routing
+app.UseMiddleware<MockApiMiddleware>();
 
 app.UseAntiforgery();
 

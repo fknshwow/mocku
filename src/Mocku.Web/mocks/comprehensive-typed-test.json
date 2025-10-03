@@ -1,0 +1,50 @@
+{
+  "path": "/api/comprehensive-types/{id}",
+  "method": "POST",
+  "statusCode": 200,
+  "contentType": "application/json",
+  "responseHeaders": {
+    "X-User-ID": "{{request.path.id}}",
+    "X-Request-Count": "{{request.headers.x-request-count}}"
+  },
+  "responseBody": {
+    "pathParams": {
+      "id": "{{request.path.id}}",
+      "idAsString": "User ID: {{request.path.id}}"
+    },
+    "queryParams": {
+      "page": "{{request.query.page}}",
+      "active": "{{request.query.active}}",
+      "price": "{{request.query.price}}",
+      "search": "{{request.query.search}}"
+    },
+    "headerValues": {
+      "userAgent": "{{request.headers.user-agent}}",
+      "requestCount": "{{request.headers.x-request-count}}"
+    },
+    "bodyValues": {
+      "userId": "{{request.body.userId}}",
+      "name": "{{request.body.name}}",
+      "age": "{{request.body.age}}",
+      "isActive": "{{request.body.isActive}}",
+      "score": "{{request.body.score}}",
+      "preferences": "{{request.body.preferences}}",
+      "tags": "{{request.body.tags}}"
+    },
+    "nestedBodyValues": {
+      "userName": "{{request.body.user.name}}",
+      "userEmail": "{{request.body.user.email}}",
+      "userAge": "{{request.body.user.age}}",
+      "userActive": "{{request.body.user.active}}",
+      "profileBio": "{{request.body.user.profile.bio}}",
+      "settingsTheme": "{{request.body.settings.theme}}",
+      "settingsNotifications": "{{request.body.settings.notifications}}"
+    },
+    "mixedValues": {
+      "message": "User {{request.body.user.name}} (ID: {{request.path.id}}) on page {{request.query.page}}",
+      "userIdTyped": "{{request.body.userId}}",
+      "userIdInMessage": "Processing user ID {{request.body.userId}}",
+      "combinedScore": "{{request.body.score}}"
+    }
+  }
+}

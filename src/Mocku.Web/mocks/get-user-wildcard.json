@@ -1,0 +1,19 @@
+{
+  "path": "/api/users/{id}",
+  "method": "GET",
+  "statusCode": 200,
+  "contentType": "application/json",
+  "responseBody": {
+    "id": "{id}",
+    "name": "User {{id}}",
+    "email": "user{id}@example.com",
+    "profile": {
+      "userId": "{id}",
+      "displayName": "Dynamic User {{id}}"
+    },
+    "metadata": {
+      "requestedId": "{{id}}",
+      "generatedAt": "2024-01-20T16:45:00Z"
+    }
+  }
+}

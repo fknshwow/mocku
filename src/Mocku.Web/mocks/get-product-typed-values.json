@@ -1,0 +1,23 @@
+{
+  "path": "/api/products/{id}",
+  "method": "GET",
+  "statusCode": 200,
+  "contentType": "application/json",
+  "responseBody": {
+    "id": "{{request.path.id}}",
+    "name": "Product {{request.path.id}}",
+    "price": "{{request.query.price}}",
+    "inStock": "{{request.query.inStock}}",
+    "categoryId": "{{request.query.categoryId}}",
+    "rating": "{{request.query.rating}}",
+    "tags": [
+      "tag1",
+      "tag2"
+    ],
+    "metadata": {
+      "productId": "{{request.path.id}}",
+      "discounted": "{{request.query.discounted}}",
+      "inventory": "{{request.query.inventory}}"
+    }
+  }
+}

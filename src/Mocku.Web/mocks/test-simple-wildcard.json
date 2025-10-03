@@ -1,0 +1,12 @@
+{
+  "path": "/api/test/{param}",
+  "method": "GET",
+  "statusCode": 200,
+  "contentType": "application/json",
+  "responseBody": {
+    "message": "Hello {{param}}!",
+    "parameter": "{param}",
+    "timestamp": "2024-01-20T16:45:00Z",
+    "route": "/api/test/{{param}}"
+  }
+}

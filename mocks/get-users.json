@@ -1,0 +1,31 @@
+{
+  "path": "/api/users",
+  "method": "GET",
+  "statusCode": 200,
+  "contentType": "application/json",
+  "delayMs": 100,
+  "responseHeaders": {
+    "X-Total-Count": "3",
+    "Cache-Control": "no-cache"
+  },
+  "responseBody": [
+    {
+      "id": 1,
+      "name": "John Doe",
+      "email": "john.doe@example.com",
+      "role": "admin"
+    },
+    {
+      "id": 2,
+      "name": "Jane Smith",
+      "email": "jane.smith@example.com",
+      "role": "user"
+    },
+    {
+      "id": 3,
+      "name": "Bob Johnson",
+      "email": "bob.johnson@example.com",
+      "role": "user"
+    }
+  ]
+}

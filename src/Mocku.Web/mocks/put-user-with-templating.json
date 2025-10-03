@@ -1,0 +1,24 @@
+{
+  "path": "/api/users/{id}",
+  "method": "PUT",
+  "statusCode": 200,
+  "contentType": "application/json",
+  "responseHeaders": {
+    "X-Updated-User": "{{request.path.id}}",
+    "X-Updated-Fields": "{{request.headers.x-updated-fields}}"
+  },
+  "responseBody": {
+    "id": "{{request.path.id}}",
+    "name": "{{request.body.name}}",
+    "email": "{{request.body.email}}",
+    "age": "{{request.body.age}}",
+    "status": "updated",
+    "message": "User {{request.path.id}} updated with name {{request.body.name}}",
+    "profile": {
+      "displayName": "{{request.body.profile.displayName}}",
+      "bio": "{{request.body.profile.bio}}"
+    },
+    "updatedBy": "{{request.headers.x-user-id}}",
+    "timestamp": "2024-01-20T16:45:00Z"
+  }
+}

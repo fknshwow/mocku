@@ -1,0 +1,38 @@
+{
+  "path": "/api/echo",
+  "method": "POST",
+  "statusCode": 200,
+  "contentType": "application/json",
+  "responseHeaders": {
+    "X-Echo-User": "{{request.body.user.name}}",
+    "X-Echo-ID": "{{request.body.id}}",
+    "X-Original-Host": "{{request.headers.host}}",
+    "X-Content-Type": "{{request.headers.content-type}}"
+  },
+  "responseBody": {
+    "echo": {
+      "path": "{{request.path.param}}",
+      "headers": {
+        "host": "{{request.headers.host}}",
+        "userAgent": "{{request.headers.user-agent}}",
+        "authorization": "{{request.headers.authorization}}",
+        "contentType": "{{request.headers.content-type}}"
+      },
+      "query": {
+        "debug": "{{request.query.debug}}",
+        "format": "{{request.query.format}}"
+      },
+      "body": {
+        "id": "{{request.body.id}}",
+        "message": "{{request.body.message}}",
+        "user": {
+          "name": "{{request.body.user.name}}",
+          "email": "{{request.body.user.email}}"
+        },
+        "data": "{{request.body.data}}"
+      }
+    },
+    "message": "Echo response for user {{request.body.user.name}} with message: {{request.body.message}}",
+    "timestamp": "2024-01-20T16:45:00Z"
+  }
+}

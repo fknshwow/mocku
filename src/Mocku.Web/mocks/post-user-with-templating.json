@@ -1,0 +1,24 @@
+{
+  "path": "/api/users",
+  "method": "POST",
+  "statusCode": 201,
+  "contentType": "application/json",
+  "responseHeaders": {
+    "Location": "/api/users/{{request.body.id}}",
+    "X-Created-By": "{{request.headers.x-api-key}}",
+    "X-Request-ID": "{{request.headers.x-request-id}}"
+  },
+  "responseBody": {
+    "id": "{{request.body.id}}",
+    "name": "{{request.body.name}}",
+    "email": "{{request.body.email}}",
+    "status": "created",
+    "message": "User {{request.body.name}} has been created successfully",
+    "metadata": {
+      "createdBy": "{{request.headers.x-api-key}}",
+      "userAgent": "{{request.headers.user-agent}}",
+      "host": "{{request.headers.host}}",
+      "requestId": "{{request.headers.x-request-id}}"
+    }
+  }
+}

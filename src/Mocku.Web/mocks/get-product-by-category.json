@@ -1,0 +1,23 @@
+{
+  "path": "/api/products/{category}/{productId}",
+  "method": "GET",
+  "statusCode": 200,
+  "contentType": "application/json",
+  "delayMs": 50,
+  "responseHeaders": {
+    "X-Category": "{{category}}",
+    "X-Product-ID": "{{productId}}"
+  },
+  "responseBody": {
+    "id": "{productId}",
+    "name": "Product {{productId}}",
+    "category": "{category}",
+    "description": "This is a {category} product with ID {productId}",
+    "price": 99.99,
+    "inStock": true,
+    "categoryInfo": {
+      "name": "{{category}}",
+      "slug": "{{category}}"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "path": "/api/users/{id}",
+  "method": "GET",
+  "statusCode": 200,
+  "contentType": "application/json",
+  "responseBody": {
+    "id": "{{toNumber(request.path.id)}}",
+    "name": "User {{request.path.id}}",
+    "email": "user{{request.path.id}}@example.com",
+    "active": "{{toBool(request.query.active)}}",
+    "age": "{{toInt(request.query.age)}}",
+    "score": "{{toFloat(request.query.score)}}",
+    "isAdmin": "{{toBool(request.headers.x-is-admin)}}",
+    "preferences": {
+      "notifications": "{{toBool(request.query.notifications)}}",
+      "theme": "{{toString(request.query.theme)}}",
+      "maxItems": "{{toNumber(request.query.maxItems)}}"
+    },
+    "metadata": {
+      "userId": "{{toNumber(request.path.id)}}",
+      "userIdAsString": "{{toString(request.path.id)}}",
+      "debugMode": "{{toBool(request.query.debug)}}"
+    }
+  }
+}

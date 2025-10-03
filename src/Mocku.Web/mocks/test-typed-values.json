@@ -1,0 +1,23 @@
+{
+  "path": "/api/test-types",
+  "method": "POST",
+  "statusCode": 200,
+  "contentType": "application/json",
+  "responseBody": {
+    "stringValue": "{{request.body.stringValue}}",
+    "numberValue": "{{request.body.numberValue}}",
+    "booleanValue": "{{request.body.booleanValue}}",
+    "arrayValue": "{{request.body.arrayValue}}",
+    "objectValue": "{{request.body.objectValue}}",
+    "pathId": "{{request.path.id}}",
+    "queryParam": "{{request.query.param}}",
+    "headerValue": "{{request.headers.x-test-header}}",
+    "nested": {
+      "userId": "{{request.body.user.id}}",
+      "userName": "{{request.body.user.name}}",
+      "userActive": "{{request.body.user.active}}",
+      "userScore": "{{request.body.user.score}}"
+    },
+    "message": "Testing typed values for {{request.body.user.name}} with score {{request.body.user.score}}"
+  }
+}

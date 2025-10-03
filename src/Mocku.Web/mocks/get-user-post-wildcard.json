@@ -1,0 +1,17 @@
+{
+  "path": "/api/users/{userId}/posts/{postId}",
+  "method": "GET",
+  "statusCode": 200,
+  "contentType": "application/json",
+  "responseBody": {
+    "id": "{postId}",
+    "title": "Post {{postId}} by User {{userId}}",
+    "authorId": "{userId}",
+    "content": "This is post {postId} created by user {userId}.",
+    "url": "/api/users/{{userId}}/posts/{{postId}}",
+    "author": {
+      "id": "{userId}",
+      "name": "User {{userId}}"
+    }
+  }
+}

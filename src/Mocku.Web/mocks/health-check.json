@@ -1,0 +1,12 @@
+{
+  "path": "/api/health",
+  "method": "GET",
+  "statusCode": 200,
+  "contentType": "application/json",
+  "responseBody": {
+    "status": "healthy",
+    "timestamp": "2024-01-20T16:45:00Z",
+    "version": "1.0.0",
+    "environment": "development"
+  }
+}

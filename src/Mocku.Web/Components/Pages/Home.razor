@@ -1,7 +1,391 @@
 ﻿@page "/"
+@using Mocku.Web.Services
+@using Mocku.Web.Models
+@inject MockApiService MockApiService
+@inject ILogger<Home> Logger
+@implements IDisposable
+@rendermode InteractiveServer
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Mocku - Mock API Management</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Mock API Management</h1>
+                <div>
+                    @if (isAutoRefreshEnabled)
+                    {
+                        <span class="badge bg-success me-2">
+                            <i class="bi bi-arrow-repeat"></i> Auto-refresh ON
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary me-2">
+                            <i class="bi bi-pause"></i> Auto-refresh OFF
+                        </span>
+                    }
+                    <button class="btn btn-outline-secondary btn-sm me-2" @onclick="ToggleAutoRefresh">
+                        @if (isAutoRefreshEnabled)
+                        {
+                            <text><i class="bi bi-pause"></i> Disable Auto Refresh</text>
+                        }
+                        else
+                        {
+                            <text><i class="bi bi-play"></i> Enable Auto Refresh</text>
+                        }
+                    </button>
+                    <button class="btn btn-primary" @onclick="RefreshMockDefinitions" disabled="@isRefreshing">
+                        @if (isRefreshing)
+                        {
+                            <text><i class="bi bi-arrow-clockwise spin"></i> Refreshing...</text>
+                        }
+                        else
+                        {
+                            <text><i class="bi bi-arrow-clockwise"></i> Refresh Now</text>
+                        }
+                    </button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        Active Mock Endpoints 
+                        <small class="text-muted">Last updated: @lastUpdated.ToString("HH:mm:ss")</small>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (mockDefinitions.Any())
+                    {
+                        <div class="alert alert-success">
+                            <strong>@mockDefinitions.Count</strong> mock endpoint(s) loaded successfully from <code>@MockApiService.GetMocksDirectory()</code>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Method</th>
+                                        <th>Path</th>
+                                        <th>Status Code</th>
+                                        <th>Content Type</th>
+                                        <th>Delay (ms)</th>
+                                        <th>Headers</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var mock in mockDefinitions)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <span class="badge bg-@GetMethodBadgeColor(mock.Method)">@mock.Method</span>
+                                            </td>
+                                            <td>
+                                                <code>@mock.Path</code>
+                                                @if (mock.HasWildcards)
+                                                {
+                                                    <span class="badge bg-info ms-1" title="Supports wildcard parameters">
+                                                        <i class="bi bi-asterisk"></i>
+                                                    </span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-@GetStatusBadgeColor(mock.StatusCode)">@mock.StatusCode</span>
+                                            </td>
+                                            <td>@(mock.ContentType ?? "application/json")</td>
+                                            <td>@mock.DelayMs</td>
+                                            <td>
+                                                @if (mock.ResponseHeaders.Any())
+                                                {
+                                                    <small>
+                                                        @foreach (var header in mock.ResponseHeaders)
+                                                        {
+                                                            <div><code>@header.Key: @header.Value</code></div>
+                                                        }
+                                                    </small>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">None</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (mock.HasWildcards)
+                                                {
+                                                    <button class="btn btn-sm btn-outline-secondary" disabled title="Cannot test wildcard endpoints directly">
+                                                        <i class="bi bi-asterisk"></i> Wildcard
+                                                    </button>
+                                                }
+                                                else
+                                                {
+                                                    <a href="@mock.Path" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                        <i class="bi bi-box-arrow-up-right"></i> Test
+                                                    </a>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning">
+                            <h6><i class="bi bi-exclamation-triangle"></i> No mock definitions found</h6>
+                            <p>Create JSON files in the <code>mocks</code> directory to define mock API endpoints.</p>
+                            <p class="mb-0">Current mocks directory: <code>@MockApiService.GetMocksDirectory()</code></p>
+                        </div>
+                    }
+                </div>
+            </div>
 
-Welcome to your new app.
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">How to Create Mock Definitions</h5>
+                </div>
+                <div class="card-body">
+                    <p>Create JSON files in the <code>mocks</code> directory with the following structure:</p>
+                    
+                    <pre><code>@(@"{
+  ""path"": ""/api/users/{id}"",
+  ""method"": ""GET"",
+  ""statusCode"": 200,
+  ""contentType"": ""application/json"",
+  ""delayMs"": 0,
+  ""responseHeaders"": {
+    ""X-Custom-Header"": ""custom-value""
+  },
+  ""responseBody"": {
+    ""id"": ""{id}"",
+    ""name"": ""User {{id}}"",
+    ""email"": ""user{id}@example.com""
+  }
+}")</code></pre>
+
+                    <h6 class="mt-3">Properties:</h6>
+                    <ul>
+                        <li><strong>path</strong>: The API endpoint path (required) - supports wildcards</li>
+                        <li><strong>method</strong>: HTTP method (default: "GET")</li>
+                        <li><strong>statusCode</strong>: HTTP status code (default: 200)</li>
+                        <li><strong>contentType</strong>: Response content type (default: "application/json")</li>
+                        <li><strong>delayMs</strong>: Artificial delay in milliseconds (default: 0)</li>
+                        <li><strong>responseHeaders</strong>: Custom response headers (optional) - supports request templating</li>
+                        <li><strong>responseBody</strong>: Response content (can be object or string) - supports request templating</li>
+                    </ul>
+
+                    <h6 class="mt-3">Wildcard Parameters:</h6>
+                    <p>Use <code>{paramName}</code> in the path to create wildcard routes:</p>
+                    <ul>
+                        <li><code>/users/{id}</code> - Matches /users/123, /users/abc, etc.</li>
+                        <li><code>/users/{id}/posts/{postId}</code> - Matches /users/123/posts/456</li>
+                        <li><code>/files/{*path}</code> - Catch-all: matches /files/docs/readme.txt</li>
+                    </ul>
+                    
+                    <h6 class="mt-3">Request Templating:</h6>
+                    <p>Use request data in your responses with these template variables:</p>
+                    <ul>
+                        <li><code>{{request.path.paramName}}</code> - Path parameters (e.g., {{request.path.id}})</li>
+                        <li><code>{{request.headers.headerName}}</code> - Request headers (e.g., {{request.headers.authorization}})</li>
+                        <li><code>{{request.query.paramName}}</code> - Query parameters (e.g., {{request.query.page}})</li>
+                        <li><code>{{request.body.fieldName}}</code> - Request body fields (e.g., {{request.body.name}})</li>
+                        <li><code>{{request.body.user.name}}</code> - Nested body fields with dot notation</li>
+                    </ul>
+                    
+                    <h6 class="mt-3">Type Conversion Functions:</h6>
+                    <p>Use explicit type conversion functions for precise control over output types:</p>
+                    <ul>
+                        <li><code>{{toBool(request.path.id)}}</code> - Convert to boolean (true/false)</li>
+                        <li><code>{{toNumber(request.body.age)}}</code> - Convert to integer number</li>
+                        <li><code>{{toInt(request.query.count)}}</code> - Convert to integer (alias for toNumber)</li>
+                        <li><code>{{toFloat(request.body.price)}}</code> - Convert to decimal number</li>
+                        <li><code>{{toString(request.body.id)}}</code> - Convert to string</li>
+                        <li><code>{{toArray(request.body.tags)}}</code> - Convert to array</li>
+                        <li><code>{{toObject(request.body.data)}}</code> - Convert to object</li>
+                    </ul>
+                    
+                    <h6 class="mt-3">Boolean Conversion Rules:</h6>
+                    <p>The <code>toBool()</code> function recognizes these values as true:</p>
+                    <ul>
+                        <li><code>true</code>, <code>"true"</code>, <code>"1"</code>, <code>"yes"</code>, <code>"on"</code></li>
+                        <li>Any non-zero number</li>
+                    </ul>
+                    
+                    <h6 class="mt-3">Typed Value Replacement:</h6>
+                    <p>Template variables are automatically converted to appropriate JSON types:</p>
+                    <ul>
+                        <li><strong>Numbers</strong>: <code>"id": "{{request.body.id}}"</code> → <code>"id": 123</code></li>
+                        <li><strong>Booleans</strong>: <code>"active": "{{request.body.active}}"</code> → <code>"active": true</code></li>
+                        <li><strong>Strings</strong>: <code>"name": "{{request.body.name}}"</code> → <code>"name": "John"</code></li>
+                        <li><strong>Objects/Arrays</strong>: Preserved as-is from request body</li>
+                    </ul>
+                    
+                    <h6 class="mt-3">Legacy Parameter Substitution:</h6>
+                    <p>For backward compatibility, path parameters can still use:</p>
+                    <ul>
+                        <li><code>"{paramName}"</code> - Replaces with parameter value in JSON strings</li>
+                        <li><code>{{paramName}}</code> - Replaces with parameter value anywhere in response</li>
+                    </ul>
+
+                    <h6 class="mt-3">Examples:</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Type Conversion Functions</h6>
+                            <pre><code>@(@"{
+  ""path"": ""/api/users/{id}"",
+  ""method"": ""GET"",
+  ""responseBody"": {
+    ""id"": ""{{toNumber(request.path.id)}}"",
+    ""active"": ""{{toBool(request.query.active)}}"",
+    ""name"": ""{{toString(request.path.id)}}"",
+  }
+}")</code></pre>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Request Body with Functions</h6>
+                            <pre><code>@(@"{
+  ""path"": ""/api/users"",
+  ""method"": ""POST"",
+  ""responseBody"": {
+    ""id"": ""{{toNumber(request.body.id)}}"",
+    ""age"": ""{{toInt(request.body.age)}}"",
+    ""active"": ""{{toBool(request.body.active)}}"",
+    ""score"": ""{{toFloat(request.body.score)}}"",
+  }
+}")</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <h6>Query Parameters</h6>
+                            <pre><code>@(@"{
+  ""path"": ""/api/search"",
+  ""method"": ""GET"",
+  ""responseBody"": {
+    ""page"": ""{{toNumber(request.query.page)}}"",
+    ""active"": ""{{toBool(request.query.active)}}"",
+    ""query"": ""{{toString(request.query.q)}}"",
+  }
+}")</code></pre>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Array and Object Conversion</h6>
+                            <pre><code>@(@"{
+  ""path"": ""/api/data"",
+  ""method"": ""POST"",
+  ""responseBody"": {
+    ""tags"": ""{{toArray(request.body.tags)}}"",
+    ""metadata"": ""{{toObject(request.body.metadata)}}"",
+    ""csv"": ""{{toArray(apple,banana,cherry)}}"",
+  }
+}")</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<MockApiDefinition> mockDefinitions = new();
+    private DateTime lastUpdated = DateTime.Now;
+    private bool isAutoRefreshEnabled = true;
+    private bool isRefreshing = false;
+    private bool isComponentDisposed = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Subscribe to changes
+        MockApiService.MockDefinitionsChanged += OnMockDefinitionsChanged;
+        await RefreshMockDefinitionsAsync();
+    }
+
+    private async void OnMockDefinitionsChanged()
+    {
+        if (!isComponentDisposed && isAutoRefreshEnabled)
+        {
+            try
+            {
+                await InvokeAsync(async () =>
+                {
+                    await RefreshMockDefinitionsAsync();
+                    StateHasChanged();
+                });
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error handling mock definitions changed event");
+            }
+        }
+    }
+
+    private async Task RefreshMockDefinitionsAsync()
+    {
+        if (isRefreshing) return;
+        
+        try
+        {
+            isRefreshing = true;
+            StateHasChanged();
+            
+            // Add a small delay to make the refresh visible
+            await Task.Delay(100);
+            
+            mockDefinitions = MockApiService.GetAllMockDefinitions().ToList();
+            lastUpdated = DateTime.Now;
+            Logger.LogInformation("Refreshed mock definitions, found {Count} definitions", mockDefinitions.Count);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error refreshing mock definitions");
+        }
+        finally
+        {
+            isRefreshing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RefreshMockDefinitions()
+    {
+        await RefreshMockDefinitionsAsync();
+    }
+
+    private void ToggleAutoRefresh()
+    {
+        isAutoRefreshEnabled = !isAutoRefreshEnabled;
+        Logger.LogInformation("Auto-refresh {Status}", isAutoRefreshEnabled ? "enabled" : "disabled");
+        StateHasChanged();
+    }
+
+    private string GetMethodBadgeColor(string method) => method.ToUpper() switch
+    {
+        "GET" => "primary",
+        "POST" => "success",
+        "PUT" => "warning",
+        "DELETE" => "danger",
+        "PATCH" => "info",
+        _ => "secondary"
+    };
+
+    private string GetStatusBadgeColor(int statusCode) => statusCode switch
+    {
+        >= 200 and < 300 => "success",
+        >= 300 and < 400 => "info",
+        >= 400 and < 500 => "warning",
+        >= 500 => "danger",
+        _ => "secondary"
+    };
+
+    public void Dispose()
+    {
+        isComponentDisposed = true;
+        // Unsubscribe from events to prevent memory leaks
+        MockApiService.MockDefinitionsChanged -= OnMockDefinitionsChanged;
+    }
+}

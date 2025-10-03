@@ -1,0 +1,44 @@
+{
+  "path": "/api/test-functions",
+  "method": "POST",
+  "statusCode": 200,
+  "contentType": "application/json",
+  "responseBody": {
+    "typeConversions": {
+      "stringToNumber": "{{toNumber(request.body.stringNumber)}}",
+      "stringToBool": "{{toBool(request.body.stringBool)}}",
+      "numberToString": "{{toString(request.body.numberValue)}}",
+      "boolToString": "{{toString(request.body.boolValue)}}",
+      "numberToBool": "{{toBool(request.body.numberValue)}}",
+      "stringToFloat": "{{toFloat(request.body.stringFloat)}}",
+      "arrayToArray": "{{toArray(request.body.arrayValue)}}",
+      "objectToObject": "{{toObject(request.body.objectValue)}}"
+    },
+    "pathParameters": {
+      "idAsNumber": "{{toNumber(request.path.id)}}",
+      "idAsString": "{{toString(request.path.id)}}",
+      "idAsBool": "{{toBool(request.path.id)}}"
+    },
+    "queryParameters": {
+      "pageAsNumber": "{{toNumber(request.query.page)}}",
+      "activeAsBool": "{{toBool(request.query.active)}}",
+      "searchAsString": "{{toString(request.query.search)}}",
+      "priceAsFloat": "{{toFloat(request.query.price)}}"
+    },
+    "headerValues": {
+      "userIdAsNumber": "{{toNumber(request.headers.x-user-id)}}",
+      "adminAsBool": "{{toBool(request.headers.x-is-admin)}}",
+      "tokenAsString": "{{toString(request.headers.authorization)}}"
+    },
+    "specialCases": {
+      "zeroAsBool": "{{toBool(0)}}",
+      "oneAsBool": "{{toBool(1)}}",
+      "yesAsBool": "{{toBool(yes)}}",
+      "noAsBool": "{{toBool(no)}}",
+      "onAsBool": "{{toBool(on)}}",
+      "offAsBool": "{{toBool(off)}}",
+      "emptyStringAsBool": "{{toBool()}}",
+      "csvToArray": "{{toArray(apple,banana,cherry)}}"
+    }
+  }
+}

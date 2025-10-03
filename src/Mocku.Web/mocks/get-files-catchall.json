@@ -1,0 +1,17 @@
+{
+  "path": "/api/files/{*filePath}",
+  "method": "GET",
+  "statusCode": 200,
+  "contentType": "application/json",
+  "responseBody": {
+    "path": "{{filePath}}",
+    "name": "File at {{filePath}}",
+    "size": 1024,
+    "type": "file",
+    "downloadUrl": "/download/{{filePath}}",
+    "metadata": {
+      "fullPath": "{{filePath}}",
+      "accessed": "2024-01-20T16:45:00Z"
+    }
+  }
+}

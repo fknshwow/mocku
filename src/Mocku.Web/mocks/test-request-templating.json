@@ -1,0 +1,23 @@
+{
+  "path": "/api/test-request-templating",
+  "method": "POST",
+  "statusCode": 200,
+  "contentType": "application/json",
+  "responseHeaders": {
+    "X-Echo-Name": "{{request.body.name}}",
+    "X-Echo-User-Agent": "{{request.headers.user-agent}}",
+    "X-Echo-Query": "{{request.query.test}}"
+  },
+  "responseBody": {
+    "message": "Testing request templating",
+    "echoed": {
+      "bodyName": "{{request.body.name}}",
+      "bodyEmail": "{{request.body.email}}",
+      "headerHost": "{{request.headers.host}}",
+      "headerUserAgent": "{{request.headers.user-agent}}",
+      "queryTest": "{{request.query.test}}",
+      "queryDebug": "{{request.query.debug}}"
+    },
+    "combined": "Hello {{request.body.name}} from {{request.headers.host}} with test={{request.query.test}}"
+  }
+}

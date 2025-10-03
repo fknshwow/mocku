@@ -1,0 +1,11 @@
+{
+  "path": "/api/test-live-reload",
+  "method": "GET",
+  "statusCode": 200,
+  "contentType": "application/json",
+  "responseBody": {
+    "message": "This endpoint was created to test live reload functionality!",
+    "timestamp": "2024-01-20T16:45:00Z",
+    "feature": "auto-refresh"
+  }
+}

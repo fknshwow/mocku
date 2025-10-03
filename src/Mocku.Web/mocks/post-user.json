@@ -1,0 +1,16 @@
+{
+  "path": "/api/users",
+  "method": "POST",
+  "statusCode": 201,
+  "contentType": "application/json",
+  "responseHeaders": {
+    "Location": "/api/users/4"
+  },
+  "responseBody": {
+    "id": 4,
+    "name": "New User",
+    "email": "new.user@example.com",
+    "role": "user",
+    "createdAt": "2024-01-20T16:45:00Z"
+  }
+}

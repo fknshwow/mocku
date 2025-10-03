@@ -1,0 +1,39 @@
+{
+  "path": "/api/search",
+  "method": "GET",
+  "statusCode": 200,
+  "contentType": "application/json",
+  "responseHeaders": {
+    "X-Search-Query": "{{request.query.q}}",
+    "X-Page": "{{request.query.page}}",
+    "X-User-Agent": "{{request.headers.user-agent}}"
+  },
+  "responseBody": {
+    "query": "{{request.query.q}}",
+    "page": "{{request.query.page}}",
+    "pageSize": "{{request.query.size}}",
+    "filters": {
+      "category": "{{request.query.category}}",
+      "sort": "{{request.query.sort}}"
+    },
+    "metadata": {
+      "searchedBy": "{{request.headers.x-user-id}}",
+      "userAgent": "{{request.headers.user-agent}}",
+      "requestId": "{{request.headers.x-request-id}}"
+    },
+    "results": [
+      {
+        "id": 1,
+        "title": "Result for query: {{request.query.q}}",
+        "relevance": 0.95
+      },
+      {
+        "id": 2,
+        "title": "Another result for: {{request.query.q}}",
+        "relevance": 0.87
+      }
+    ],
+    "totalResults": 2,
+    "message": "Found results for '{{request.query.q}}' on page {{request.query.page}}"
+  }
+}

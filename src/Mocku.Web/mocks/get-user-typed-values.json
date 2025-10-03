@@ -1,0 +1,18 @@
+{
+  "path": "/api/users/{id}",
+  "method": "GET",
+  "statusCode": 200,
+  "contentType": "application/json",
+  "responseBody": {
+    "id": "{{request.path.id}}",
+    "name": "User {{request.path.id}}",
+    "email": "user{{request.path.id}}@example.com",
+    "active": true,
+    "age": 25,
+    "score": 85.5,
+    "metadata": {
+      "requestedId": "{{request.path.id}}",
+      "isAdmin": false
+    }
+  }
+}

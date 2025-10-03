@@ -1,0 +1,36 @@
+{
+  "path": "/api/products-functions/{category}/{id}",
+  "method": "GET",
+  "statusCode": 200,
+  "contentType": "application/json",
+  "responseBody": {
+    "id": "{{toNumber(request.path.id)}}",
+    "name": "Product {{toString(request.path.id)}}",
+    "category": "{{toString(request.path.category)}}",
+    "price": "{{toFloat(request.query.price)}}",
+    "inStock": "{{toBool(request.query.inStock)}}",
+    "quantity": "{{toInt(request.query.quantity)}}",
+    "featured": "{{toBool(request.query.featured)}}",
+    "rating": "{{toFloat(request.query.rating)}}",
+    "tags": "{{toArray(request.query.tags)}}",
+    "specifications": {
+      "weight": "{{toFloat(request.query.weight)}}",
+      "dimensions": "{{toString(request.query.dimensions)}}",
+      "color": "{{toString(request.query.color)}}",
+      "warranty": "{{toNumber(request.query.warranty)}}",
+      "energyEfficient": "{{toBool(request.query.energyEfficient)}}"
+    },
+    "availability": {
+      "inStock": "{{toBool(request.query.inStock)}}",
+      "stockCount": "{{toNumber(request.query.stockCount)}}",
+      "restockDate": "{{toString(request.query.restockDate)}}",
+      "preOrder": "{{toBool(request.query.preOrder)}}"
+    },
+    "metadata": {
+      "categoryId": "{{toNumber(request.path.category)}}",
+      "categoryName": "{{toString(request.path.category)}}",
+      "productId": "{{toNumber(request.path.id)}}",
+      "searchable": "{{toBool(request.query.searchable)}}"
+    }
+  }
+}

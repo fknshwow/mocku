@@ -1,0 +1,11 @@
+{
+  "path": "/api/users/999",
+  "method": "GET",
+  "statusCode": 404,
+  "contentType": "application/json",
+  "responseBody": {
+    "error": "User not found",
+    "code": "USER_NOT_FOUND",
+    "message": "The requested user with ID 999 does not exist."
+  }
+}

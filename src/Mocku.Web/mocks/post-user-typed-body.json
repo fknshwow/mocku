@@ -1,0 +1,29 @@
+{
+  "path": "/api/users",
+  "method": "POST",
+  "statusCode": 201,
+  "contentType": "application/json",
+  "responseHeaders": {
+    "Location": "/api/users/{{request.body.id}}"
+  },
+  "responseBody": {
+    "id": "{{request.body.id}}",
+    "name": "{{request.body.name}}",
+    "email": "{{request.body.email}}",
+    "age": "{{request.body.age}}",
+    "active": "{{request.body.active}}",
+    "score": "{{request.body.score}}",
+    "preferences": {
+      "notifications": "{{request.body.preferences.notifications}}",
+      "theme": "{{request.body.preferences.theme}}",
+      "maxItems": "{{request.body.preferences.maxItems}}"
+    },
+    "roles": "{{request.body.roles}}",
+    "metadata": {
+      "createdAt": "2024-01-20T16:45:00Z",
+      "userId": "{{request.body.id}}",
+      "isVerified": "{{request.body.isVerified}}"
+    },
+    "message": "User {{request.body.name}} created with ID {{request.body.id}}"
+  }
+}

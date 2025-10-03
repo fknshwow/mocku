@@ -1,0 +1,15 @@
+{
+  "path": "/api/users/1",
+  "method": "GET",
+  "statusCode": 200,
+  "contentType": "application/json",
+  "delayMs": 50,
+  "responseBody": {
+    "id": 1,
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "role": "admin",
+    "createdAt": "2024-01-15T10:30:00Z",
+    "lastLogin": "2024-01-20T14:22:00Z"
+  }
+}

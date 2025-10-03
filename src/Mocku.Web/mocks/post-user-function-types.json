@@ -1,0 +1,34 @@
+{
+  "path": "/api/users",
+  "method": "POST",
+  "statusCode": 201,
+  "contentType": "application/json",
+  "responseHeaders": {
+    "Location": "/api/users/{{toString(request.body.id)}}",
+    "X-User-Active": "{{toBool(request.body.active)}}",
+    "X-User-Age": "{{toNumber(request.body.age)}}"
+  },
+  "responseBody": {
+    "id": "{{toNumber(request.body.id)}}",
+    "name": "{{toString(request.body.name)}}",
+    "email": "{{toString(request.body.email)}}",
+    "age": "{{toInt(request.body.age)}}",
+    "active": "{{toBool(request.body.active)}}",
+    "score": "{{toFloat(request.body.score)}}",
+    "roles": "{{toArray(request.body.roles)}}",
+    "profile": "{{toObject(request.body.profile)}}",
+    "preferences": {
+      "emailNotifications": "{{toBool(request.body.preferences.emailNotifications)}}",
+      "theme": "{{toString(request.body.preferences.theme)}}",
+      "itemsPerPage": "{{toNumber(request.body.preferences.itemsPerPage)}}",
+      "autoSave": "{{toBool(request.body.preferences.autoSave)}}"
+    },
+    "metadata": {
+      "createdAt": "2024-01-20T16:45:00Z",
+      "isVerified": "{{toBool(request.body.isVerified)}}",
+      "priority": "{{toNumber(request.body.priority)}}",
+      "tags": "{{toArray(request.body.tags)}}"
+    },
+    "message": "User {{toString(request.body.name)}} created with ID {{toNumber(request.body.id)}}"
+  }
+}
