@@ -4,7 +4,9 @@ This guide explains how to build, deploy, and run the Mocku.Web application usin
 
 ## Quick Start
 
-### Local Development with Docker
+### For Development (from project root)
+
+If you're in the project root directory (where the `src` folder is):
 
 1. **Build and run locally:**
    ```bash
@@ -18,6 +20,28 @@ This guide explains how to build, deploy, and run the Mocku.Web application usin
    ```
    The application will be available at `http://localhost:80`
 
+### For Quick Testing (from any directory)
+
+If you want to run from any directory or just test with pre-built images:
+
+1. **Create a local mocks directory:**
+   ```bash
+   mkdir mocks
+   # Add your mock JSON files to this directory
+   ```
+
+2. **Use the simple compose file:**
+   ```bash
+   docker-compose -f docker-compose.simple.yml up
+   ```
+
+3. **Or run directly with Docker:**
+   ```bash
+   docker run -p 8080:8080 \
+     -v $(pwd)/mocks:/app/mocks:ro \
+     ghcr.io/[your-username]/mocku:latest
+   ```
+
 ### Using Pre-built Images from GHCR
 
 1. **Pull the latest image:**
@@ -25,12 +49,50 @@ This guide explains how to build, deploy, and run the Mocku.Web application usin
    docker pull ghcr.io/[your-username]/mocku:latest
    ```
 
-2. **Run the container:**
+2. **Run with local mocks:**
    ```bash
-   docker run -p 8080:8080 \
-     -v $(pwd)/mocks:/app/mocks:ro \
-     ghcr.io/[your-username]/mocku:latest
+   # Windows PowerShell
+   docker run -p 8080:8080 -v "${PWD}/mocks:/app/mocks:ro" ghcr.io/[your-username]/mocku:latest
+   
+   # Linux/Mac
+   docker run -p 8080:8080 -v "$(pwd)/mocks:/app/mocks:ro" ghcr.io/[your-username]/mocku:latest
    ```
+
+## Troubleshooting Volume Mount Issues
+
+If you encounter the error: `"not a directory: unknown: Are you trying to mount a directory onto a file"`
+
+### Solution 1: Ensure you're in the correct directory
+```bash
+# Navigate to the project root (where src/ folder exists)
+cd /path/to/your/project
+docker-compose up --build
+```
+
+### Solution 2: Use the simple compose file
+```bash
+# This works from any directory
+mkdir -p mocks
+docker-compose -f docker-compose.simple.yml up
+```
+
+### Solution 3: Run without volume mount (uses built-in mocks)
+```bash
+docker run -p 8080:8080 ghcr.io/[your-username]/mocku:latest
+```
+
+### Solution 4: Create mocks directory manually
+```bash
+# Windows
+mkdir mocks
+echo {} > mocks/example.json
+
+# Linux/Mac  
+mkdir -p mocks
+echo '{}' > mocks/example.json
+
+docker-compose up
+```
 
 ## GitHub Actions CI/CD Pipeline
 
@@ -81,6 +143,12 @@ docker run -d \
   --restart unless-stopped \
   ghcr.io/[your-username]/mocku:latest
 ```
+
+### Available Docker Compose Files
+
+1. **docker-compose.yml** - For development from project root
+2. **docker-compose.simple.yml** - For running from any directory with pre-built images
+3. **docker-compose.override.yml** - Development overrides (auto-loaded with docker-compose.yml)
 
 ### Kubernetes Deployment
 
@@ -159,15 +227,21 @@ docker buildx build --platform linux/amd64,linux/arm64 \
 
 ### Common Issues
 
-1. **Permission denied when pushing to GHCR:**
+1. **"not a directory" mount error:**
+   - Ensure the mocks directory exists: `mkdir -p mocks`
+   - Check you're in the project root directory
+   - Use `docker-compose.simple.yml` for external directories
+
+2. **Permission denied when pushing to GHCR:**
    - Ensure `GITHUB_TOKEN` has `packages: write` permission
    - Make sure the repository visibility allows package creation
 
-2. **Mock files not loading:**
+3. **Mock files not loading:**
    - Verify the volume mount path: `-v /host/path:/app/mocks:ro`
    - Check file permissions on the host system
+   - Ensure JSON files are valid
 
-3. **Application not accessible:**
+4. **Application not accessible:**
    - Verify port mapping: `-p 8080:8080`
    - Check if the container is running: `docker ps`
    - Review container logs: `docker logs [container-name]`
@@ -181,11 +255,17 @@ docker logs -f mocku-web
 # Execute shell in running container
 docker exec -it mocku-web /bin/bash
 
+# List files in mocks directory inside container
+docker exec -it mocku-web ls -la /app/mocks
+
 # Inspect image details
 docker inspect ghcr.io/[your-username]/mocku:latest
 
 # Remove all containers and images
 docker system prune -a
+
+# Test if mocks directory is properly mounted
+docker exec -it mocku-web cat /app/mocks/sample.json
 ```
 
 ## Security Considerations
@@ -200,3 +280,4 @@ docker system prune -a
 1. **Multi-stage Build:** The Dockerfile uses multi-stage builds to minimize image size
 2. **Docker Layer Caching:** The GitHub Actions workflow includes build cache optimization
 3. **Multi-platform Support:** Images are built for both AMD64 and ARM64 architectures
+4. **Built-in Mocks:** Default mocks are included in the image, external mounting is optional

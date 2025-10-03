@@ -18,6 +18,16 @@ WORKDIR /app
 # Copy the published app
 COPY --from=build /app/publish .
 
+# Copy default mocks if they exist
+COPY --from=build /app/src/Mocku.Web/mocks ./mocks
+
+# Create mocks directory if it doesn't exist and set permissions
+RUN mkdir -p /app/mocks && chmod 755 /app/mocks
+
+# Set environment variables
+ENV ASPNETCORE_ENVIRONMENT=Development
+ENV ASPNETCORE_URLS=http://+:8080
+
 # Expose port 8080 (default for ASP.NET Core in containers)
 EXPOSE 8080
 
