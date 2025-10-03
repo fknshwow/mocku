@@ -86,3 +86,69 @@ pre code {
 .auto-refresh-indicator {
     transition: all 0.3s ease;
 }
+
+/* File Management Styles */
+.nav-tabs .nav-link {
+    border: 1px solid transparent;
+    border-radius: 0.375rem 0.375rem 0 0;
+}
+
+.nav-tabs .nav-link.active {
+    color: #495057;
+    background-color: #fff;
+    border-color: #dee2e6 #dee2e6 #fff;
+}
+
+.modal {
+    z-index: 1050;
+}
+
+.modal-backdrop {
+    z-index: 1040;
+}
+
+.font-monospace {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
+.btn-group-sm > .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+.file-status-valid {
+    color: #198754;
+}
+
+.file-status-invalid {
+    color: #dc3545;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.025);
+}
+
+.modal-lg {
+    max-width: 800px;
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 200px;
+}
+
+.input-group-text {
+    background-color: #e9ecef;
+    border-color: #ced4da;
+}
+
+.form-text {
+    font-size: 0.875em;
+    color: #6c757d;
+}
+
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}

@@ -1,0 +1,16 @@
+{
+  "path": "/api/test-file-management",
+  "method": "GET",
+  "statusCode": 200,
+  "contentType": "application/json",
+  "responseBody": {
+    "message": "This endpoint was created through the file management interface!",
+    "timestamp": "2024-01-20T16:45:00Z",
+    "features": [
+      "Create files",
+      "Edit files",
+      "Delete files",
+      "File validation"
+    ]
+  }
+}

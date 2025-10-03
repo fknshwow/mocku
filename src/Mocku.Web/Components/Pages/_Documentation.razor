@@ -1,0 +1,149 @@
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">How to Create Mock Definitions</h5>
+    </div>
+    <div class="card-body">
+        <p>Create JSON files in the <code>mocks</code> directory with the following structure:</p>
+        
+        <pre><code>@(@"{
+  ""path"": ""/api/users/{id}"",
+  ""method"": ""GET"",
+  ""statusCode"": 200,
+  ""contentType"": ""application/json"",
+  ""delayMs"": 0,
+  ""responseHeaders"": {
+    ""X-Custom-Header"": ""custom-value""
+  },
+  ""responseBody"": {
+    ""id"": ""{id}"",
+    ""name"": ""User {{id}}"",
+    ""email"": ""user{id}@example.com""
+  }
+}")</code></pre>
+
+        <h6 class="mt-3">Properties:</h6>
+        <ul>
+            <li><strong>path</strong>: The API endpoint path (required) - supports wildcards</li>
+            <li><strong>method</strong>: HTTP method (default: "GET")</li>
+            <li><strong>statusCode</strong>: HTTP status code (default: 200)</li>
+            <li><strong>contentType</strong>: Response content type (default: "application/json")</li>
+            <li><strong>delayMs</strong>: Artificial delay in milliseconds (default: 0)</li>
+            <li><strong>responseHeaders</strong>: Custom response headers (optional) - supports request templating</li>
+            <li><strong>responseBody</strong>: Response content (can be object or string) - supports request templating</li>
+        </ul>
+
+        <h6 class="mt-3">Wildcard Parameters:</h6>
+        <p>Use <code>{paramName}</code> in the path to create wildcard routes:</p>
+        <ul>
+            <li><code>/users/{id}</code> - Matches /users/123, /users/abc, etc.</li>
+            <li><code>/users/{id}/posts/{postId}</code> - Matches /users/123/posts/456</li>
+            <li><code>/files/{*path}</code> - Catch-all: matches /files/docs/readme.txt</li>
+        </ul>
+        
+        <h6 class="mt-3">Request Templating:</h6>
+        <p>Use request data in your responses with these template variables:</p>
+        <ul>
+            <li><code>{{request.path.paramName}}</code> - Path parameters (e.g., {{request.path.id}})</li>
+            <li><code>{{request.headers.headerName}}</code> - Request headers (e.g., {{request.headers.authorization}})</li>
+            <li><code>{{request.query.paramName}}</code> - Query parameters (e.g., {{request.query.page}})</li>
+            <li><code>{{request.body.fieldName}}</code> - Request body fields (e.g., {{request.body.name}})</li>
+            <li><code>{{request.body.user.name}}</code> - Nested body fields with dot notation</li>
+        </ul>
+        
+        <h6 class="mt-3">Type Conversion Functions:</h6>
+        <p>Use explicit type conversion functions for precise control over output types:</p>
+        <ul>
+            <li><code>{{toBool(request.path.id)}}</code> - Convert to boolean (true/false)</li>
+            <li><code>{{toNumber(request.body.age)}}</code> - Convert to integer number</li>
+            <li><code>{{toInt(request.query.count)}}</code> - Convert to integer (alias for toNumber)</li>
+            <li><code>{{toFloat(request.body.price)}}</code> - Convert to decimal number</li>
+            <li><code>{{toString(request.body.id)}}</code> - Convert to string</li>
+            <li><code>{{toArray(request.body.tags)}}</code> - Convert to array</li>
+            <li><code>{{toObject(request.body.data)}}</code> - Convert to object</li>
+        </ul>
+        
+        <h6 class="mt-3">Boolean Conversion Rules:</h6>
+        <p>The <code>toBool()</code> function recognizes these values as true:</p>
+        <ul>
+            <li><code>true</code>, <code>"true"</code>, <code>"1"</code>, <code>"yes"</code>, <code>"on"</code></li>
+            <li>Any non-zero number</li>
+        </ul>
+        
+        <h6 class="mt-3">Typed Value Replacement:</h6>
+        <p>Template variables are automatically converted to appropriate JSON types:</p>
+        <ul>
+            <li><strong>Numbers</strong>: <code>"id": "{{request.body.id}}"</code> ? <code>"id": 123</code></li>
+            <li><strong>Booleans</strong>: <code>"active": "{{request.body.active}}"</code> ? <code>"active": true</code></li>
+            <li><strong>Strings</strong>: <code>"name": "{{request.body.name}}"</code> ? <code>"name": "John"</code></li>
+            <li><strong>Objects/Arrays</strong>: Preserved as-is from request body</li>
+        </ul>
+        
+        <h6 class="mt-3">Legacy Parameter Substitution:</h6>
+        <p>For backward compatibility, path parameters can still use:</p>
+        <ul>
+            <li><code>"{paramName}"</code> - Replaces with parameter value in JSON strings</li>
+            <li><code>{{paramName}}</code> - Replaces with parameter value anywhere in response</li>
+        </ul>
+
+        <h6 class="mt-3">Examples:</h6>
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Type Conversion Functions</h6>
+                <pre><code>@(@"{
+  ""path"": ""/api/users/{id}"",
+  ""method"": ""GET"",
+  ""responseBody"": {
+    ""id"": ""{{toNumber(request.path.id)}}"",
+    ""active"": ""{{toBool(request.query.active)}}"",
+    ""name"": ""{{toString(request.path.id)}}"",
+  }
+}")</code></pre>
+            </div>
+            <div class="col-md-6">
+                <h6>Request Body with Functions</h6>
+                <pre><code>@(@"{
+  ""path"": ""/api/users"",
+  ""method"": ""POST"",
+  ""responseBody"": {
+    ""id"": ""{{toNumber(request.body.id)}}"",
+    ""age"": ""{{toInt(request.body.age)}}"",
+    ""active"": ""{{toBool(request.body.active)}}"",
+    ""score"": ""{{toFloat(request.body.score)}}"",
+  }
+}")</code></pre>
+            </div>
+        </div>
+        
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <h6>Query Parameters</h6>
+                <pre><code>@(@"{
+  ""path"": ""/api/search"",
+  ""method"": ""GET"",
+  ""responseBody"": {
+    ""page"": ""{{toNumber(request.query.page)}}"",
+    ""active"": ""{{toBool(request.query.active)}}"",
+    ""query"": ""{{toString(request.query.q)}}"",
+  }
+}")</code></pre>
+            </div>
+            <div class="col-md-6">
+                <h6>Array and Object Conversion</h6>
+                <pre><code>@(@"{
+  ""path"": ""/api/data"",
+  ""method"": ""POST"",
+  ""responseBody"": {
+    ""tags"": ""{{toArray(request.body.tags)}}"",
+    ""metadata"": ""{{toObject(request.body.metadata)}}"",
+    ""csv"": ""{{toArray(apple,banana,cherry)}}"",
+  }
+}")</code></pre>
+            </div>
+        </div>
+
+        <div class="alert alert-info mt-3">
+            <h6><i class="bi bi-lightbulb"></i> Live Reloading</h6>
+            <p class="mb-0">The management interface automatically updates when you add, modify, or delete JSON files in the mocks directory. No need to restart the application!</p>
+        </div>
+    </div>
+</div>

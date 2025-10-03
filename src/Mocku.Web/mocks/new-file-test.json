@@ -1,0 +1,18 @@
+{
+  "path": "/api/newfiletest",
+  "method": "GET",
+  "statusCode": 200,
+  "contentType": "application/json",
+  "delayMs": 0,
+  "responseHeaders": {
+    "X-Custom-Header": "custom-value"
+  },
+  "responseBody": {
+    "message": "Hello World",
+    "timestamp": "{{request.headers.timestamp}}",
+    "data": {
+      "id": "{{toNumber(request.query.id)}}",
+      "active": "{{toBool(request.query.active)}}"
+    }
+  }
+}

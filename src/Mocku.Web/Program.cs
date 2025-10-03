@@ -11,6 +11,7 @@ builder.Services.AddRazorComponents()
 // Add mock API services
 builder.Services.AddSingleton<MockApiService>();
 builder.Services.AddSingleton<TemplateProcessor>();
+builder.Services.AddScoped<MockFileService>();
 
 var app = builder.Build();
 
