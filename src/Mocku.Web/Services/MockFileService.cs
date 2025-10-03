@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using Mocku.Web.Models;
 
 namespace Mocku.Web.Services;
@@ -141,13 +140,6 @@ public class MockFileService
     {
         try
         {
-            // Ensure .json extension and convert to kebab-case
-            var cleanFileName = ConvertToKebabCase(fileName.Trim());
-            if (!cleanFileName.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
-            {
-                cleanFileName = $"{cleanFileName}.json";
-            }
-
             // Validate JSON before saving
             try
             {
@@ -158,20 +150,20 @@ public class MockFileService
 
                 if (mockDefinition == null || string.IsNullOrEmpty(mockDefinition.Path))
                 {
-                    _logger.LogWarning("Invalid mock definition in file: {FileName} - missing path", cleanFileName);
+                    _logger.LogWarning("Invalid mock definition in file: {FileName} - missing path", fileName);
                     return false;
                 }
             }
             catch (JsonException ex)
             {
-                _logger.LogWarning(ex, "Invalid JSON in file: {FileName}", cleanFileName);
+                _logger.LogWarning(ex, "Invalid JSON in file: {FileName}", fileName);
                 return false;
             }
 
-            var filePath = Path.Combine(_mocksDirectory, cleanFileName);
+            var filePath = Path.Combine(_mocksDirectory, fileName);
             await File.WriteAllTextAsync(filePath, content);
             
-            _logger.LogInformation("Saved mock file: {FileName}", cleanFileName);
+            _logger.LogInformation("Saved mock file: {FileName}", fileName);
             return true;
         }
         catch (Exception ex)
@@ -179,41 +171,6 @@ public class MockFileService
             _logger.LogError(ex, "Error saving mock file: {FileName}", fileName);
             return false;
         }
-    }
-
-    private string ConvertToKebabCase(string input)
-    {
-        if (string.IsNullOrWhiteSpace(input))
-            return "";
-
-        // Remove .json extension temporarily if present
-        var hasJsonExtension = input.EndsWith(".json", StringComparison.OrdinalIgnoreCase);
-        var nameWithoutExtension = hasJsonExtension ? 
-            input.Substring(0, input.Length - 5) : input;
-
-        // Convert to lowercase and replace various separators with dashes
-        var result = nameWithoutExtension
-            .ToLowerInvariant()
-            .Replace(" ", "-")           // spaces to dashes
-            .Replace("_", "-")           // underscores to dashes
-            .Replace(".", "-")           // dots to dashes (except file extension)
-            .Replace("--", "-")          // double dashes to single
-            .Replace("---", "-");        // triple dashes to single
-
-        // Remove invalid characters but keep dashes, letters, and numbers
-        result = new string(result.Where(c => char.IsLetterOrDigit(c) || c == '-').ToArray());
-
-        // Remove leading/trailing dashes and handle multiple consecutive dashes
-        result = System.Text.RegularExpressions.Regex.Replace(result, @"-+", "-")
-            .Trim('-');
-
-        // Add back extension if it was present
-        if (hasJsonExtension)
-        {
-            result += ".json";
-        }
-
-        return result;
     }
 
     public async Task<bool> CreateMockFileAsync(string fileName, string content)

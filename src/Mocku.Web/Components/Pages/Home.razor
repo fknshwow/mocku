@@ -1,4 +1,4 @@
-﻿@page "/"
+@page "/"
 @using Mocku.Web.Services
 @using Mocku.Web.Models
 @using System.Text.Json
@@ -101,67 +101,178 @@
                                     <strong>@mockDefinitions.Count</strong> mock endpoint(s) loaded successfully from <code>@MockApiService.GetMocksDirectory()</code>
                                 </div>
                                 
+                                <!-- Search Bar -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="input-group">
+                                            <span class="input-group-text">
+                                                <i class="bi bi-search"></i>
+                                            </span>
+                                            <input type="text" 
+                                                   class="form-control" 
+                                                   placeholder="Search endpoints by path, method, status code, or content type..." 
+                                                   @bind="endpointSearchTerm" 
+                                                   @oninput="OnEndpointSearchInput" />
+                                            @if (!string.IsNullOrWhiteSpace(endpointSearchTerm))
+                                            {
+                                                <button class="btn btn-outline-secondary" type="button" @onclick="ClearEndpointSearch">
+                                                    <i class="bi bi-x"></i>
+                                                </button>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 d-flex align-items-center">
+                                        @{
+                                            var filteredEndpoints = GetSortedEndpoints();
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(endpointSearchTerm))
+                                        {
+                                            <small class="text-muted">
+                                                Showing @filteredEndpoints.Count of @mockDefinitions.Count endpoints
+                                            </small>
+                                        }
+                                    </div>
+                                </div>
+                                
                                 <div class="table-responsive">
-                                    <table class="table table-striped">
+                                    <table class="table table-striped table-hover">
                                         <thead>
                                             <tr>
-                                                <th>Method</th>
-                                                <th>Path</th>
-                                                <th>Status Code</th>
-                                                <th>Content Type</th>
-                                                <th>Delay (ms)</th>
-                                                <th>Headers</th>
+                                                <th @onclick='() => SortEndpoints("method")' class="sortable-header">
+                                                    Method
+                                                    @if (currentSortColumn == "method")
+                                                    {
+                                                        <span class="sort-indicator ms-1">@(isAscending ? "?" : "?")</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="sort-indicator ms-1 text-muted">?</span>
+                                                    }
+                                                </th>
+                                                <th @onclick='() => SortEndpoints("path")' class="sortable-header">
+                                                    Path
+                                                    @if (currentSortColumn == "path")
+                                                    {
+                                                        <span class="sort-indicator ms-1">@(isAscending ? "?" : "?")</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="sort-indicator ms-1 text-muted">?</span>
+                                                    }
+                                                </th>
+                                                <th @onclick='() => SortEndpoints("statusCode")' class="sortable-header">
+                                                    Status Code
+                                                    @if (currentSortColumn == "statusCode")
+                                                    {
+                                                        <span class="sort-indicator ms-1">@(isAscending ? "?" : "?")</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="sort-indicator ms-1 text-muted">?</span>
+                                                    }
+                                                </th>
+                                                <th @onclick='() => SortEndpoints("contentType")' class="sortable-header">
+                                                    Content Type
+                                                    @if (currentSortColumn == "contentType")
+                                                    {
+                                                        <span class="sort-indicator ms-1">@(isAscending ? "?" : "?")</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="sort-indicator ms-1 text-muted">?</span>
+                                                    }
+                                                </th>
+                                                <th @onclick='() => SortEndpoints("delay")' class="sortable-header">
+                                                    Delay (ms)
+                                                    @if (currentSortColumn == "delay")
+                                                    {
+                                                        <span class="sort-indicator ms-1">@(isAscending ? "?" : "?")</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="sort-indicator ms-1 text-muted">?</span>
+                                                    }
+                                                </th>
+                                                <th @onclick='() => SortEndpoints("headers")' class="sortable-header">
+                                                    Headers
+                                                    @if (currentSortColumn == "headers")
+                                                    {
+                                                        <span class="sort-indicator ms-1">@(isAscending ? "?" : "?")</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="sort-indicator ms-1 text-muted">?</span>
+                                                    }
+                                                </th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach (var mock in mockDefinitions)
+                                            @if (filteredEndpoints.Any())
+                                            {
+                                                @foreach (var mock in filteredEndpoints)
+                                                {
+                                                    <tr>
+                                                        <td>
+                                                            <span class="badge bg-@GetMethodBadgeColor(mock.Method)">@mock.Method</span>
+                                                        </td>
+                                                        <td>
+                                                            <code class="endpoint-path">@mock.Path</code>
+                                                            @if (mock.HasWildcards)
+                                                            {
+                                                                <span class="badge bg-info ms-1" title="Supports wildcard parameters">
+                                                                    <i class="bi bi-asterisk"></i>
+                                                                </span>
+                                                            }
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge bg-@GetStatusBadgeColor(mock.StatusCode)">@mock.StatusCode</span>
+                                                        </td>
+                                                        <td>@(mock.ContentType ?? "application/json")</td>
+                                                        <td>@mock.DelayMs</td>
+                                                        <td>
+                                                            @if (mock.ResponseHeaders.Any())
+                                                            {
+                                                                <small>
+                                                                    @foreach (var header in mock.ResponseHeaders)
+                                                                    {
+                                                                        <div><code>@header.Key: @header.Value</code></div>
+                                                                    }
+                                                                </small>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="text-muted">None</span>
+                                                            }
+                                                        </td>
+                                                        <td>
+                                                            @if (mock.HasWildcards)
+                                                            {
+                                                                <button class="btn btn-sm btn-outline-secondary" disabled title="Cannot test wildcard endpoints directly">
+                                                                    <i class="bi bi-asterisk"></i> Wildcard
+                                                                </button>
+                                                            }
+                                                            else
+                                                            {
+                                                                <a href="@mock.Path" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                                    <i class="bi bi-box-arrow-up-right"></i> Test
+                                                                </a>
+                                                            }
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            }
+                                            else
                                             {
                                                 <tr>
-                                                    <td>
-                                                        <span class="badge bg-@GetMethodBadgeColor(mock.Method)">@mock.Method</span>
-                                                    </td>
-                                                    <td>
-                                                        <code>@mock.Path</code>
-                                                        @if (mock.HasWildcards)
+                                                    <td colspan="7" class="text-center text-muted py-4">
+                                                        <i class="bi bi-search me-2"></i>
+                                                        No endpoints match your search criteria.
+                                                        @if (!string.IsNullOrWhiteSpace(endpointSearchTerm))
                                                         {
-                                                            <span class="badge bg-info ms-1" title="Supports wildcard parameters">
-                                                                <i class="bi bi-asterisk"></i>
-                                                            </span>
-                                                        }
-                                                    </td>
-                                                    <td>
-                                                        <span class="badge bg-@GetStatusBadgeColor(mock.StatusCode)">@mock.StatusCode</span>
-                                                    </td>
-                                                    <td>@(mock.ContentType ?? "application/json")</td>
-                                                    <td>@mock.DelayMs</td>
-                                                    <td>
-                                                        @if (mock.ResponseHeaders.Any())
-                                                        {
-                                                            <small>
-                                                                @foreach (var header in mock.ResponseHeaders)
-                                                                {
-                                                                    <div><code>@header.Key: @header.Value</code></div>
-                                                                }
-                                                            </small>
-                                                        }
-                                                        else
-                                                        {
-                                                            <span class="text-muted">None</span>
-                                                        }
-                                                    </td>
-                                                    <td>
-                                                        @if (mock.HasWildcards)
-                                                        {
-                                                            <button class="btn btn-sm btn-outline-secondary" disabled title="Cannot test wildcard endpoints directly">
-                                                                <i class="bi bi-asterisk"></i> Wildcard
+                                                            <button class="btn btn-link btn-sm p-0 ms-2" @onclick="ClearEndpointSearch">
+                                                                Clear search
                                                             </button>
-                                                        }
-                                                        else
-                                                        {
-                                                            <a href="@mock.Path" target="_blank" class="btn btn-sm btn-outline-primary">
-                                                                <i class="bi bi-box-arrow-up-right"></i> Test
-                                                            </a>
                                                         }
                                                     </td>
                                                 </tr>
@@ -195,6 +306,39 @@
                         <div class="card-body">
                             @if (mockFiles.Any())
                             {
+                                <!-- Search Bar -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="input-group">
+                                            <span class="input-group-text">
+                                                <i class="bi bi-search"></i>
+                                            </span>
+                                            <input type="text" 
+                                                   class="form-control" 
+                                                   placeholder="Search files by name, endpoint path, or method..." 
+                                                   @bind="fileSearchTerm" 
+                                                   @oninput="OnFileSearchInput" />
+                                            @if (!string.IsNullOrWhiteSpace(fileSearchTerm))
+                                            {
+                                                <button class="btn btn-outline-secondary" type="button" @onclick="ClearFileSearch">
+                                                    <i class="bi bi-x"></i>
+                                                </button>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 d-flex align-items-center">
+                                        @{
+                                            var filteredFiles = GetFilteredFiles();
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(fileSearchTerm))
+                                        {
+                                            <small class="text-muted">
+                                                Showing @filteredFiles.Count of @mockFiles.Count files
+                                            </small>
+                                        }
+                                    </div>
+                                </div>
+
                                 <div class="table-responsive">
                                     <table class="table table-hover">
                                         <thead>
@@ -209,54 +353,72 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach (var file in mockFiles)
+                                            @if (filteredFiles.Any())
+                                            {
+                                                @foreach (var file in filteredFiles)
+                                                {
+                                                    <tr>
+                                                        <td>
+                                                            <i class="bi bi-file-earmark-text me-2"></i>
+                                                            <code>@file.FileName</code>
+                                                        </td>
+                                                        <td>
+                                                            @if (file.IsValid)
+                                                            {
+                                                                <span class="badge bg-success">Valid</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="badge bg-danger" title="@file.Error">Invalid</span>
+                                                            }
+                                                        </td>
+                                                        <td>
+                                                            @if (file.MockDefinition != null)
+                                                            {
+                                                                <code>@file.MockDefinition.Path</code>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="text-muted">-</span>
+                                                            }
+                                                        </td>
+                                                        <td>
+                                                            @if (file.MockDefinition != null)
+                                                            {
+                                                                <span class="badge bg-@GetMethodBadgeColor(file.MockDefinition.Method)">@file.MockDefinition.Method</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="text-muted">-</span>
+                                                            }
+                                                        </td>
+                                                        <td>@file.LastModified.ToString("yyyy-MM-dd HH:mm")</td>
+                                                        <td>@FormatFileSize(file.Size)</td>
+                                                        <td>
+                                                            <div class="btn-group btn-group-sm">
+                                                                <button class="btn btn-outline-primary" @onclick="() => EditFile(file.FileName)" title="Edit">
+                                                                    <i class="bi bi-pencil"></i>
+                                                                </button>
+                                                                <button class="btn btn-outline-danger" @onclick="() => ShowDeleteConfirm(file.FileName)" title="Delete">
+                                                                    <i class="bi bi-trash"></i>
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            }
+                                            else
                                             {
                                                 <tr>
-                                                    <td>
-                                                        <i class="bi bi-file-earmark-text me-2"></i>
-                                                        <code>@file.FileName</code>
-                                                    </td>
-                                                    <td>
-                                                        @if (file.IsValid)
+                                                    <td colspan="7" class="text-center text-muted py-4">
+                                                        <i class="bi bi-search me-2"></i>
+                                                        No files match your search criteria.
+                                                        @if (!string.IsNullOrWhiteSpace(fileSearchTerm))
                                                         {
-                                                            <span class="badge bg-success">Valid</span>
-                                                        }
-                                                        else
-                                                        {
-                                                            <span class="badge bg-danger" title="@file.Error">Invalid</span>
-                                                        }
-                                                    </td>
-                                                    <td>
-                                                        @if (file.MockDefinition != null)
-                                                        {
-                                                            <code>@file.MockDefinition.Path</code>
-                                                        }
-                                                        else
-                                                        {
-                                                            <span class="text-muted">-</span>
-                                                        }
-                                                    </td>
-                                                    <td>
-                                                        @if (file.MockDefinition != null)
-                                                        {
-                                                            <span class="badge bg-@GetMethodBadgeColor(file.MockDefinition.Method)">@file.MockDefinition.Method</span>
-                                                        }
-                                                        else
-                                                        {
-                                                            <span class="text-muted">-</span>
-                                                        }
-                                                    </td>
-                                                    <td>@file.LastModified.ToString("yyyy-MM-dd HH:mm")</td>
-                                                    <td>@FormatFileSize(file.Size)</td>
-                                                    <td>
-                                                        <div class="btn-group btn-group-sm">
-                                                            <button class="btn btn-outline-primary" @onclick="() => EditFile(file.FileName)" title="Edit">
-                                                                <i class="bi bi-pencil"></i>
+                                                            <button class="btn btn-link btn-sm p-0 ms-2" @onclick="ClearFileSearch">
+                                                                Clear search
                                                             </button>
-                                                            <button class="btn btn-outline-danger" @onclick="() => ShowDeleteConfirm(file.FileName)" title="Delete">
-                                                                <i class="bi bi-trash"></i>
-                                                            </button>
-                                                        </div>
+                                                        }
                                                     </td>
                                                 </tr>
                                             }
@@ -427,9 +589,16 @@
     private string fileToDelete = "";
     private string validationError = "";
 
+    // Sorting state
+    private string currentSortColumn = "path";
+    private bool isAscending = true;
+
+    // Search state
+    private string endpointSearchTerm = "";
+    private string fileSearchTerm = "";
+
     protected override async Task OnInitializedAsync()
     {
-        // Subscribe to changes
         MockApiService.MockDefinitionsChanged += OnMockDefinitionsChanged;
         await RefreshMockDefinitionsAsync();
         await RefreshMockFilesAsync();
@@ -463,8 +632,6 @@
         {
             isRefreshing = true;
             StateHasChanged();
-            
-            // Add a small delay to make the refresh visible
             await Task.Delay(100);
             
             mockDefinitions = MockApiService.GetAllMockDefinitions().ToList();
@@ -553,7 +720,6 @@
             return;
         }
 
-        // Automatically add .json extension if not provided
         var fileName = GetFinalFileName(currentFileName);
 
         try
@@ -647,6 +813,96 @@
         }
     }
 
+    // Endpoint sorting and filtering methods
+    private List<MockApiDefinition> GetSortedEndpoints()
+    {
+        var filtered = mockDefinitions.AsEnumerable();
+
+        // Apply search filter
+        if (!string.IsNullOrWhiteSpace(endpointSearchTerm))
+        {
+            var searchTerm = endpointSearchTerm.ToLowerInvariant();
+            filtered = filtered.Where(e => 
+                e.Path.ToLowerInvariant().Contains(searchTerm) ||
+                e.Method.ToLowerInvariant().Contains(searchTerm) ||
+                (e.ContentType?.ToLowerInvariant().Contains(searchTerm) ?? false) ||
+                e.StatusCode.ToString().Contains(searchTerm)
+            );
+        }
+
+        var sorted = filtered;
+
+        sorted = currentSortColumn switch
+        {
+            "method" => isAscending ? sorted.OrderBy(e => e.Method) : sorted.OrderByDescending(e => e.Method),
+            "path" => isAscending ? sorted.OrderBy(e => e.Path) : sorted.OrderByDescending(e => e.Path),
+            "statusCode" => isAscending ? sorted.OrderBy(e => e.StatusCode) : sorted.OrderByDescending(e => e.StatusCode),
+            "contentType" => isAscending ? sorted.OrderBy(e => e.ContentType ?? "application/json") : sorted.OrderByDescending(e => e.ContentType ?? "application/json"),
+            "delay" => isAscending ? sorted.OrderBy(e => e.DelayMs) : sorted.OrderByDescending(e => e.DelayMs),
+            "headers" => isAscending ? sorted.OrderBy(e => e.ResponseHeaders.Count) : sorted.OrderByDescending(e => e.ResponseHeaders.Count),
+            _ => sorted.OrderBy(e => e.Path)
+        };
+
+        return sorted.ToList();
+    }
+
+    private List<MockFileInfo> GetFilteredFiles()
+    {
+        var filtered = mockFiles.AsEnumerable();
+
+        // Apply search filter
+        if (!string.IsNullOrWhiteSpace(fileSearchTerm))
+        {
+            var searchTerm = fileSearchTerm.ToLowerInvariant();
+            filtered = filtered.Where(f => 
+                f.FileName.ToLowerInvariant().Contains(searchTerm) ||
+                (f.MockDefinition?.Path.ToLowerInvariant().Contains(searchTerm) ?? false) ||
+                (f.MockDefinition?.Method.ToLowerInvariant().Contains(searchTerm) ?? false)
+            );
+        }
+
+        return filtered.OrderBy(f => f.FileName).ToList();
+    }
+
+    private void SortEndpoints(string column)
+    {
+        if (currentSortColumn == column)
+        {
+            isAscending = !isAscending;
+        }
+        else
+        {
+            currentSortColumn = column;
+            isAscending = true;
+        }
+        StateHasChanged();
+    }
+
+    // Search helper methods
+    private void OnEndpointSearchInput(ChangeEventArgs e)
+    {
+        endpointSearchTerm = e.Value?.ToString() ?? "";
+        StateHasChanged();
+    }
+
+    private void OnFileSearchInput(ChangeEventArgs e)
+    {
+        fileSearchTerm = e.Value?.ToString() ?? "";
+        StateHasChanged();
+    }
+
+    private void ClearEndpointSearch()
+    {
+        endpointSearchTerm = "";
+        StateHasChanged();
+    }
+
+    private void ClearFileSearch()
+    {
+        fileSearchTerm = "";
+        StateHasChanged();
+    }
+
     // Utility Methods
     private string GetMethodBadgeColor(string method) => method.ToUpper() switch
     {
@@ -674,13 +930,6 @@
         return $"{bytes / (1024 * 1024):F1} MB";
     }
 
-    public void Dispose()
-    {
-        isComponentDisposed = true;
-        // Unsubscribe from events to prevent memory leaks
-        MockApiService.MockDefinitionsChanged -= OnMockDefinitionsChanged;
-    }
-
     // Filename helper methods
     private void OnFileNameInput(ChangeEventArgs e)
     {
@@ -694,8 +943,6 @@
             return "";
             
         var cleanFileName = fileName.Trim();
-        
-        // Convert to kebab-case (lowercase with dashes)
         var kebabCase = ConvertToKebabCase(cleanFileName);
         
         if (!kebabCase.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
@@ -710,28 +957,21 @@
         if (string.IsNullOrWhiteSpace(input))
             return "";
 
-        // Remove .json extension temporarily if present
         var hasJsonExtension = input.EndsWith(".json", StringComparison.OrdinalIgnoreCase);
         var nameWithoutExtension = hasJsonExtension ? 
             input.Substring(0, input.Length - 5) : input;
 
-        // Convert to lowercase and replace various separators with dashes
         var result = nameWithoutExtension
             .ToLowerInvariant()
-            .Replace(" ", "-")           // spaces to dashes
-            .Replace("_", "-")           // underscores to dashes
-            .Replace(".", "-")           // dots to dashes (except file extension)
-            .Replace("--", "-")          // double dashes to single
-            .Replace("---", "-");        // triple dashes to single
+            .Replace(" ", "-")
+            .Replace("_", "-")
+            .Replace(".", "-")
+            .Replace("--", "-")
+            .Replace("---", "-");
 
-        // Remove invalid characters but keep dashes, letters, and numbers
         result = new string(result.Where(c => char.IsLetterOrDigit(c) || c == '-').ToArray());
+        result = System.Text.RegularExpressions.Regex.Replace(result, @"-+", "-").Trim('-');
 
-        // Remove leading/trailing dashes and handle multiple consecutive dashes
-        result = System.Text.RegularExpressions.Regex.Replace(result, @"-+", "-")
-            .Trim('-');
-
-        // Add back extension if it was present
         if (hasJsonExtension)
         {
             result += ".json";
@@ -746,18 +986,21 @@
             return false;
 
         var cleanFileName = fileName.Trim();
-        
-        // Check for invalid characters
         var invalidChars = Path.GetInvalidFileNameChars();
         if (cleanFileName.Any(c => invalidChars.Contains(c)))
             return false;
 
-        // Check for reserved names
         var reservedNames = new[] { "CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9" };
         var nameWithoutExtension = Path.GetFileNameWithoutExtension(cleanFileName.EndsWith(".json", StringComparison.OrdinalIgnoreCase) ? cleanFileName : $"{cleanFileName}.json");
         if (reservedNames.Contains(nameWithoutExtension.ToUpper()))
             return false;
 
         return true;
+    }
+
+    public void Dispose()
+    {
+        isComponentDisposed = true;
+        MockApiService.MockDefinitionsChanged -= OnMockDefinitionsChanged;
     }
 }
