@@ -1,0 +1,20 @@
+{
+  "path": "/api/test-logging",
+  "method": "GET",
+  "statusCode": 200,
+  "contentType": "application/json",
+  "delayMs": 500,
+  "responseHeaders": {
+    "X-Test-Header": "Logging-Demo",
+    "X-Custom-Value": "{{request.headers.user-agent}}"
+  },
+  "responseBody": {
+    "message": "This endpoint is for testing the logging functionality",
+    "timestamp": "{{now}}",
+    "requestInfo": {
+      "userAgent": "{{request.headers.user-agent}}",
+      "host": "{{request.headers.host}}",
+      "method": "{{request.method}}"
+    }
+  }
+}

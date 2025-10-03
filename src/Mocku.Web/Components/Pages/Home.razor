@@ -6,6 +6,7 @@
 @using System.Text.RegularExpressions
 @inject MockApiService MockApiService
 @inject MockFileService MockFileService
+@inject RequestLogService RequestLogService
 @inject ILogger<Home> Logger
 @implements IDisposable
 @rendermode InteractiveServer
@@ -63,6 +64,10 @@
                             @onclick='() => SetActiveTab("endpoints")' 
                             type="button">
                         <i class="bi bi-list-ul"></i> Active Endpoints
+                        @if (mockDefinitions.Any())
+                        {
+                            <span class="badge bg-success ms-1">@mockDefinitions.Count</span>
+                        }
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -70,6 +75,10 @@
                             @onclick='() => SetActiveTab("files")' 
                             type="button">
                         <i class="bi bi-file-earmark-text"></i> Mock Files
+                        @if (mockFiles.Any())
+                        {
+                            <span class="badge bg-info ms-1">@mockFiles.Count</span>
+                        }
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -77,6 +86,17 @@
                             @onclick='() => SetActiveTab("docs")' 
                             type="button">
                         <i class="bi bi-book"></i> Documentation
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link @(activeTab == "logs" ? "active" : "")" 
+                            @onclick='() => SetActiveTab("logs")' 
+                            type="button">
+                        <i class="bi bi-list-columns"></i> Request Logs
+                        @if (requestLogs.Any())
+                        {
+                            <span class="badge bg-primary ms-1">@requestLogs.Count</span>
+                        }
                     </button>
                 </li>
             </ul>
@@ -97,10 +117,6 @@
                         <div class="card-body">
                             @if (mockDefinitions.Any())
                             {
-                                <div class="alert alert-success">
-                                    <strong>@mockDefinitions.Count</strong> mock endpoint(s) loaded successfully from <code>@MockApiService.GetMocksDirectory()</code>
-                                </div>
-                                
                                 <!-- Search Bar -->
                                 <div class="row mb-3">
                                     <div class="col-md-6">
@@ -442,6 +458,185 @@
                 {
                     <_Documentation />
                 }
+
+                <!-- Logs Tab -->
+                @if (activeTab == "logs")
+                {
+                    <div class="card logs-tab-card">
+                        <div class="card-header d-flex justify-content-between align-items-center py-2">
+                            <h6 class="card-title mb-0">
+                                Request Logs
+                                <small class="text-muted ms-2">Real-time monitoring</small>
+                            </h6>
+                            <div>
+                                <button class="btn btn-warning btn-sm me-2" @onclick="ClearLogs">
+                                    <i class="bi bi-trash"></i> Clear Logs
+                                </button>
+                                <button class="btn btn-primary btn-sm" @onclick="RefreshLogs">
+                                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body p-2">
+                            @if (requestLogs.Any())
+                            {
+                                <div class="mb-2">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text">
+                                                    <i class="bi bi-search"></i>
+                                                </span>
+                                                <input type="text" 
+                                                       class="form-control" 
+                                                       placeholder="Search logs by method, path, status, or IP..." 
+                                                       @bind="logSearchTerm" 
+                                                       @oninput="OnLogSearchInput" />
+                                                @if (!string.IsNullOrWhiteSpace(logSearchTerm))
+                                                {
+                                                    <button class="btn btn-outline-secondary" type="button" @onclick="ClearLogSearch">
+                                                        <i class="bi bi-x"></i>
+                                                    </button>
+                                                }
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 d-flex align-items-center">
+                                            @{
+                                                var filteredLogs = GetFilteredLogs();
+                                            }
+                                            <small class="text-muted">
+                                                @if (!string.IsNullOrWhiteSpace(logSearchTerm))
+                                                {
+                                                    <text>Showing @filteredLogs.Count of @requestLogs.Count entries</text>
+                                                }
+                                                else
+                                                {
+                                                    <text>@requestLogs.Count total entries</text>
+                                                }
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="logs-container" id="logsContainer">
+                                    @foreach (var log in filteredLogs.Take(100)) // Limit to first 100 for performance
+                                    {
+                                        <div class="log-entry card mb-1 @(log.IsMatchedByMock ? "border-success" : "border-warning")">
+                                            <div class="card-body p-2">
+                                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                                    <div class="d-flex align-items-center flex-wrap">
+                                                        <span class="badge bg-@GetMethodBadgeColor(log.Method) me-1">@log.Method</span>
+                                                        <code class="me-1 small">@log.Path@(string.IsNullOrEmpty(log.QueryString) ? "" : log.QueryString)</code>
+                                                        <span class="badge bg-@GetStatusBadgeColor(log.StatusCode) me-1">@log.StatusCode</span>
+                                                        @if (log.IsMatchedByMock)
+                                                        {
+                                                            <span class="badge bg-success me-1" title="Matched by mock">
+                                                                <i class="bi bi-check-circle"></i> Mock
+                                                            </span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-warning me-1" title="No mock matched">
+                                                                <i class="bi bi-exclamation-triangle"></i> Passthrough
+                                                            </span>
+                                                        }
+                                                    </div>
+                                                    <div class="text-end">
+                                                        <small class="text-muted d-block">@log.Timestamp.ToString("HH:mm:ss.fff")</small>
+                                                        <small class="text-muted">@log.ResponseTimeMs ms</small>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <strong>Request Details:</strong>
+                                                        <div class="small mt-1">
+                                                            <div><strong>Client IP:</strong> @log.ClientIp</div>
+                                                            @if (!string.IsNullOrEmpty(log.UserAgent))
+                                                            {
+                                                                <div><strong>User Agent:</strong> <span class="text-truncate d-inline-block" style="max-width: 300px;" title="@log.UserAgent">@log.UserAgent</span></div>
+                                                            }
+                                                            @if (log.Headers.Any())
+                                                            {
+                                                                <details class="mt-1">
+                                                                    <summary><strong>Headers (@log.Headers.Count)</strong></summary>
+                                                                    <div class="mt-1 ms-3">
+                                                                        @foreach (var header in log.Headers.Take(10))
+                                                                        {
+                                                                            <div class="font-monospace small">@header.Key: @header.Value</div>
+                                                                        }
+                                                                        @if (log.Headers.Count > 10)
+                                                                        {
+                                                                            <div class="text-muted small">... and @(log.Headers.Count - 10) more</div>
+                                                                        }
+                                                                    </div>
+                                                                </details>
+                                                            }
+                                                            @if (!string.IsNullOrEmpty(log.RequestBody))
+                                                            {
+                                                                <details class="mt-1">
+                                                                    <summary><strong>Request Body</strong></summary>
+                                                                    <pre class="mt-1 p-2 bg-light small" style="max-height: 200px; overflow-y: auto;"><code>@log.RequestBody</code></pre>
+                                                                </details>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <strong>Response Details:</strong>
+                                                        <div class="small mt-1">
+                                                            @if (log.ResponseHeaders.Any())
+                                                            {
+                                                                <details>
+                                                                    <summary><strong>Response Headers (@log.ResponseHeaders.Count)</strong></summary>
+                                                                    <div class="mt-1 ms-3">
+                                                                        @foreach (var header in log.ResponseHeaders.Take(10))
+                                                                        {
+                                                                            <div class="font-monospace small">@header.Key: @header.Value</div>
+                                                                        }
+                                                                        @if (log.ResponseHeaders.Count > 10)
+                                                                        {
+                                                                            <div class="text-muted small">... and @(log.ResponseHeaders.Count - 10) more</div>
+                                                                        }
+                                                                    </div>
+                                                                </details>
+                                                            }
+                                                            @if (!string.IsNullOrEmpty(log.ResponseBody))
+                                                            {
+                                                                <details class="mt-1">
+                                                                    <summary><strong>Response Body</strong></summary>
+                                                                    <pre class="mt-1 p-2 bg-light small" style="max-height: 200px; overflow-y: auto;"><code>@log.ResponseBody</code></pre>
+                                                                </details>
+                                                            }
+                                                            @if (!string.IsNullOrEmpty(log.MockFileName))
+                                                            {
+                                                                <div class="mt-1"><strong>Mock File:</strong> <code>@log.MockFileName</code></div>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+
+                                @if (filteredLogs.Count > 100)
+                                {
+                                    <div class="alert alert-info mt-3">
+                                        <i class="bi bi-info-circle"></i>
+                                        Showing first 100 entries of @filteredLogs.Count total. Use search to filter or clear old logs for better performance.
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="alert alert-info">
+                                    <h6><i class="bi bi-info-circle"></i> No request logs yet</h6>
+                                    <p class="mb-0">Make some requests to your mock API endpoints to see the logs here. All incoming requests will be captured and displayed in real-time.</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
             </div>
         </div>
     </div>
@@ -596,12 +791,18 @@
     // Search state
     private string endpointSearchTerm = "";
     private string fileSearchTerm = "";
+    private string logSearchTerm = "";
+
+    // Logs state
+    private List<RequestLogEntry> requestLogs = new();
 
     protected override async Task OnInitializedAsync()
     {
         MockApiService.MockDefinitionsChanged += OnMockDefinitionsChanged;
+        RequestLogService.LogsChanged += OnLogsChanged;
         await RefreshMockDefinitionsAsync();
         await RefreshMockFilesAsync();
+        RefreshLogs();
     }
 
     private async void OnMockDefinitionsChanged()
@@ -622,6 +823,37 @@
                 Logger.LogError(ex, "Error handling mock definitions changed event");
             }
         }
+    }
+
+    private async void OnLogsChanged()
+    {
+        if (!isComponentDisposed)
+        {
+            try
+            {
+                await InvokeAsync(() =>
+                {
+                    RefreshLogs();
+                    StateHasChanged();
+                });
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error handling logs changed event");
+            }
+        }
+    }
+
+    private void RefreshLogs()
+    {
+        requestLogs = RequestLogService.GetLogs();
+    }
+
+    private void ClearLogs()
+    {
+        RequestLogService.ClearLogs();
+        RefreshLogs();
+        StateHasChanged();
     }
 
     private async Task RefreshMockDefinitionsAsync()
@@ -864,6 +1096,26 @@
         return filtered.OrderBy(f => f.FileName).ToList();
     }
 
+    private List<RequestLogEntry> GetFilteredLogs()
+    {
+        var filtered = requestLogs.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(logSearchTerm))
+        {
+            var searchTerm = logSearchTerm.ToLowerInvariant();
+            filtered = filtered.Where(l => 
+                l.Method.ToLowerInvariant().Contains(searchTerm) ||
+                l.Path.ToLowerInvariant().Contains(searchTerm) ||
+                l.StatusCode.ToString().Contains(searchTerm) ||
+                l.ClientIp.ToLowerInvariant().Contains(searchTerm) ||
+                (l.UserAgent?.ToLowerInvariant().Contains(searchTerm) ?? false) ||
+                (l.MockFileName?.ToLowerInvariant().Contains(searchTerm) ?? false)
+            );
+        }
+
+        return filtered.ToList();
+    }
+
     private void SortEndpoints(string column)
     {
         if (currentSortColumn == column)
@@ -891,6 +1143,12 @@
         StateHasChanged();
     }
 
+    private void OnLogSearchInput(ChangeEventArgs e)
+    {
+        logSearchTerm = e.Value?.ToString() ?? "";
+        StateHasChanged();
+    }
+
     private void ClearEndpointSearch()
     {
         endpointSearchTerm = "";
@@ -900,6 +1158,12 @@
     private void ClearFileSearch()
     {
         fileSearchTerm = "";
+        StateHasChanged();
+    }
+
+    private void ClearLogSearch()
+    {
+        logSearchTerm = "";
         StateHasChanged();
     }
 
@@ -1002,5 +1266,6 @@
     {
         isComponentDisposed = true;
         MockApiService.MockDefinitionsChanged -= OnMockDefinitionsChanged;
+        RequestLogService.LogsChanged -= OnLogsChanged;
     }
 }

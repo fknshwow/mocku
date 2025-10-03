@@ -8,10 +8,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// Add mock API services
+// Register our services
 builder.Services.AddSingleton<MockApiService>();
+builder.Services.AddSingleton<MockFileService>();
 builder.Services.AddSingleton<TemplateProcessor>();
-builder.Services.AddScoped<MockFileService>();
+builder.Services.AddSingleton<RequestLogService>();
 
 var app = builder.Build();
 
